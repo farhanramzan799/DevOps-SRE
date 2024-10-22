@@ -1,0 +1,106 @@
+jobs:
+  build-and-push:
+    executor: gcp-gcr/default
+    steps:
+      - checkout
+      - gcp-gcr/gcr-auth:
+          registry-url: ${GCR_REGISTRY}
+      - gcp-gcr/build-image:
+          dockerfile: k8s/image/Dockerfile
+          image: REPO/$CIRCLE_PROJECT_REPONAME
+          no_output_timeout: 20m
+          registry-url: ${GCR_REGISTRY}
+          tag: ${CIRCLE_SHA1:0:7}
+      - gcp-gcr/push-image:
+          digest-path: /tmp/digest.txt
+          image: REPO/$CIRCLE_PROJECT_REPONAME
+          registry-url: ${GCR_REGISTRY}
+          tag: ${CIRCLE_SHA1:0:7}
+      - gcp-gcr/tag-image:
+          image: REPO/$CIRCLE_PROJECT_REPONAME
+          registry-url: ${GCR_REGISTRY}
+          source-tag: ${CIRCLE_SHA1:0:7}
+          target-tag: $CIRCLE_BRANCH
+      - gcp-gcr/tag-image:
+          image: REPO/$CIRCLE_PROJECT_REPONAME
+          registry-url: ${GCR_REGISTRY}
+          source-tag: ${CIRCLE_SHA1:0:7}
+          target-tag: $CIRCLE_SHA1
+      - run:
+          command: |
+            echo "Digest is: $(</tmp/digest.txt)"
+  build-and-push-create:
+    executor: gcp-gcr/default
+    steps:
+      - checkout
+      - gcp-gcr/gcr-auth:
+          registry-url: ${GCR_REGISTRY}
+      - gcp-gcr/build-image:
+          dockerfile: k8s/image/Dockerfile.create
+          image: REPO/$CIRCLE_PROJECT_REPONAME/create
+          no_output_timeout: 20m
+          registry-url: ${GCR_REGISTRY}
+          tag: ${CIRCLE_SHA1:0:7}
+      - gcp-gcr/push-image:
+          digest-path: /tmp/digest-create.txt
+          image: REPO/$CIRCLE_PROJECT_REPONAME/create
+          registry-url: ${GCR_REGISTRY}
+          tag: ${CIRCLE_SHA1:0:7}
+      - gcp-gcr/tag-image:
+          image: REPO/$CIRCLE_PROJECT_REPONAME/create
+          registry-url: ${GCR_REGISTRY}
+          source-tag: ${CIRCLE_SHA1:0:7}
+          target-tag: $CIRCLE_BRANCH
+      - gcp-gcr/tag-image:
+          image: REPO/$CIRCLE_PROJECT_REPONAME/create
+          registry-url: ${GCR_REGISTRY}
+          source-tag: ${CIRCLE_SHA1:0:7}
+          target-tag: $CIRCLE_SHA1
+      - run:
+          command: |
+            echo "Digest is: $(</tmp/digest-create.txt)"
+  build-and-push-android:
+    executor: gcp-gcr/default
+    steps:
+      - checkout
+      - gcp-gcr/gcr-auth:
+          registry-url: ${GCR_REGISTRY}
+      - gcp-gcr/build-image:
+          dockerfile: k8s/image/Dockerfile.android
+          image: REPO/$CIRCLE_PROJECT_REPONAME/android
+          no_output_timeout: 20m
+          registry-url: ${GCR_REGISTRY}
+          tag: ${CIRCLE_SHA1:0:7}
+      - gcp-gcr/push-image:
+          digest-path: /tmp/digest-android.txt
+          image: REPO/$CIRCLE_PROJECT_REPONAME/android
+          registry-url: ${GCR_REGISTRY}
+          tag: ${CIRCLE_SHA1:0:7}
+      - gcp-gcr/tag-image:
+          image: REPO/$CIRCLE_PROJECT_REPONAME/android
+          registry-url: ${GCR_REGISTRY}
+          source-tag: ${CIRCLE_SHA1:0:7}
+          target-tag: $CIRCLE_BRANCH
+      - gcp-gcr/tag-image:
+          image: REPO/$CIRCLE_PROJECT_REPONAME/android
+          registry-url: ${GCR_REGISTRY}
+          source-tag: ${CIRCLE_SHA1:0:7}
+          target-tag: $CIRCLE_SHA1
+      - run:
+          command: |
+            echo "Digest is: $(</tmp/digest-android.txt)"
+orbs:
+  gcp-gcr: circleci/gcp-gcr@0.15.0
+version: 2.1
+workflows:
+  build-and-push-to-artifacts-registry:
+    jobs:
+      - build-and-push:
+          context:
+            - GCP_CENTRAL
+      - build-and-push-create:
+          context:
+            - GCP_CENTRAL
+      - build-and-push-android:
+          context:
+            - GCP_CENTRAL
