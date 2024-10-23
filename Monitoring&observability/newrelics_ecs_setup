@@ -1,0 +1,58 @@
+# step 1: Install agent using the following command
+
+sudo curl -o /etc/yum.repos.d/newrelic-infra.repo https://download.newrelic.com/infrastructure_agent/linux/yum/amazonlinux/2/x86_64/newrelic-infra.repo
+sudo yum -q makecache -y --disablerepo='*' --enablerepo='newrelic-infra'
+sudo yum install newrelic-infra -y
+
+# step 2: Copy the logs.yml file to the new-relic directory
+sudo aws s3 cp s3://BUCKET_NAME/new-relic/logs/uat/logs.yml /etc/newrelic-infra/logging.d/
+
+# Setup New Relic Agent on ECS
+
+# Once the new relic agent is being installed on ECS cluster instances (EC2 instances), now we need to setup the daemon container on ECS. That daemon container will be responsible for pulling the logs from ECS services and sending them to new relic.
+
+# Here are the steps to create the task definition and daemon service on ECS:
+
+#    Download the New Relic ECS integration task definition template file
+
+curl -O https://download.newrelic.com/infrastructure_agent/integrations/ecs/newrelic-infra-ecs-ec2-latest.json
+
+# Replace the task execution role in the template file with the newly created role:
+
+"executionRoleArn": "NewRelicECSTaskExecutionRole",
+
+# Replace the valueFrom attribute of the secret with the name of the Systems Manager parameter.
+
+# example, we use /newrelic-infra/ecs/license-key
+
+secrets": [
+  {
+    "valueFrom": "/newrelic-infra/ecs/license-key",
+    "name": "NRIA_LICENSE_KEY"
+  }
+]
+
+# Reference: 
+
+ 
+
+    Register the task definition file
+
+    aws ecs register-task-definition --cli-input-json file://newrelic-infra-ecs-ec2-latest.json
+
+    Create a service with the daemon scheduling strategy for the registered task:
+
+    aws ecs create-service --cluster "<YOUR_CLUSTER_NAME>" --service-name "wb-2-<enviornment>-newrelic-service" --task-definition "newrelic-infra" --scheduling-strategy DAEMON
+    
+    
+# step 3: 
+In order to set up/ mount the logs to a new-relic from any instance or ECS cluster, run the following command.
+
+    Replace the NEW_RELIC_API_KEY and NEW_RELIC_ACCOUNT_ID, These keys can be found from the new relic console (Image attached).
+
+    It is recommended to all Golden Signals while setting up the logging
+
+curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash && sudo NEW_RELIC_API_KEY=NRAK-5EZW90AN4XCK8S5A6VOW1DP86IH NEW_RELIC_ACCOUNT_ID=3283027 /usr/local/bin/newrelic install
+    
+    
+    

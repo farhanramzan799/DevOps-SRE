@@ -1,0 +1,26 @@
+FROM node:12.22.9
+RUN mkdir -p /home/node/app/node_modules && chown -R node:node /home/node/app
+# Global installs to non root owned directory and add that to path so they're executable
+ENV NPM_CONFIG_PREFIX=/home/node/.npm-global
+ENV PATH="/home/node/.npm-global/bin:${PATH}"
+# Install global Yarn packages:
+# - typescript: Run tsc  -p server on docker-compose up
+# - nodemon: Run the node server in development mode on docker-compose up
+# - concurrently: Run tsc and nodemon in parallel on docker-compose up
+RUN yarn global add typescript
+RUN yarn global add nodemon
+RUN yarn global add concurrently
+ARG application_dir=.
+# Set the application directory
+# Add all the files needed for yarn install
+COPY  $application_dir/package*.json ./
+# Switch to non-root user and install dependencies
+COPY . ./
+RUN npm i
+RUN ls
+# Add files to the container, perform chmod and chown
+COPY $application_dir ./
+RUN ls
+RUN npm run build
+RUN ls
+CMD ["npm","run","dev"]

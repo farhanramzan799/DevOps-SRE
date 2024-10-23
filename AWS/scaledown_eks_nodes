@@ -1,0 +1,57 @@
+import json
+import boto3
+
+eks_client = ''
+region_name = 'us-east-2'
+def lambda_handler(event, context):
+    # TODO implement
+    assume_eks_role()
+    describe_cluster()
+    resize_node_group("DEV-ENVIROMENT")
+    resize_node_group("TEST-ENVIRONMENT")
+    
+    #delete_node_group()
+    return {
+        'statusCode': 200,
+        'body': json.dumps('Hello from Lambda!')
+    }
+
+
+def assume_eks_role():
+    global aws_secret_access_key;
+    client = boto3.client('sts')
+    response = client.assume_role(
+    RoleArn='arn:aws:iam::189605259052:role/EksCodeBuildKubectlRole',
+    RoleSessionName='string',
+    DurationSeconds=1000,
+    )
+    aws_access_key_id = response['Credentials']['AccessKeyId']
+    aws_secret_access_key = response['Credentials']['SecretAccessKey']
+    aws_session_token = response['Credentials']['SessionToken']
+    start_session(aws_access_key_id,aws_secret_access_key,aws_session_token,region_name)
+   
+def start_session(aws_access_key_id,aws_secret_access_key,aws_session_token,region_name):
+    global eks_client;
+    eks_client = boto3.client('eks',aws_access_key_id=aws_access_key_id,aws_secret_access_key=aws_secret_access_key,aws_session_token=aws_session_token)
+
+def describe_cluster():
+    global eks_client
+    response = eks_client.describe_cluster(name='omni-retain')
+    
+
+def resize_node_group(nodeGroupName):
+    response = eks_client.update_nodegroup_config(
+    clusterName='omni-retain',
+    nodegroupName=nodeGroupName,
+    scalingConfig={
+        'minSize': 0,
+        'maxSize':1 ,
+        'desiredSize':0
+    }
+)
+
+def delete_node_group():
+    response = eks_client.delete_nodegroup(
+    clusterName='omni-retain',
+    nodegroupName='pool-2'
+)

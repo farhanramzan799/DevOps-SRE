@@ -1,0 +1,404 @@
+import json
+import boto3
+import re
+
+update_directories_names = []
+
+def lambda_handler(event, context):
+    #git_branch="refs/heads/sandbox"
+    # # # print("eventt",event)
+    # # # #length = len(event["commits"])-1
+    
+    event = json.loads(event['body'])
+    
+    #event["head_commit"]["modified"] = []
+    #event["head_commit"]["added"]=[]
+    #event["head_commit"]["removed"]=[]
+    git_branch = event["ref"]
+    
+    get_updated_directory_names(event["head_commit"]["modified"])
+    # # # print("update_directories_names", update_directories_names)
+
+    get_updated_directory_names(event["head_commit"]["added"])
+    # # # print("update_directories_names", update_directories_names)
+
+    get_updated_directory_names(event["head_commit"]["removed"])
+    # # # print("update_directories_names", update_directories_names)
+
+    remove_duplicate_directory_names(update_directories_names)
+    
+    validate_if_proto_directory_updated()
+    
+    trigger_code_build_pipeline(update_directories_names, git_branch)
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps(update_directories_names)
+    }
+
+def get_updated_directory_names(updated_file_list):
+    for file in updated_file_list:
+        directory_name = re.split("[/]", file)
+        update_directories_names.append(directory_name[0])
+def remove_duplicate_directory_names(updated_directory_list):
+    global update_directories_names;
+    update_directories_names = list(dict.fromkeys(updated_directory_list))
+
+def trigger_code_build_pipeline(update_directories_names, git_branch):
+    client = boto3.client('codebuild')
+    print("git branchh", git_branch)
+    if git_branch == "refs/heads/test": # sandbox env has been disabled for now, 
+        if len(update_directories_names) == 0:
+            client.start_build(projectName='coreread-lms-qa')
+            client.start_build(projectName='coreapi-lms-qa')
+            client.start_build(projectName='corewrite-lms-qa')
+            client.start_build(projectName='discountapi-lms-qa')
+            client.start_build(projectName='redeemapi-lms-qa') #
+            client.start_build(projectName='transactionread-lms-qa') #
+            client.start_build(projectName='transactionwrite-lms-qa')# directory not defined on gcp
+            client.start_build(projectName='transactionmiddleware-lms-qa')#
+            client.start_build(projectName='earnapi-lms-qa')
+            client.start_build(projectName='emailservice-lms-qa') #
+            client.start_build(projectName='notificationapi-lms-qa')
+            client.start_build(projectName='enrollapi-lms-qa') #
+            client.start_build(projectName='enrollread-lms-qa') #   
+            client.start_build(projectName='enrollwrite-lms-qa') #
+            client.start_build(projectName='graphql-api-lms-qa') 
+            client.start_build(projectName='inquire-lms-qa')
+            client.start_build(projectName='productapi-lms-qa')
+            client.start_build(projectName='productservice-lms-qa') #directory not defined on gcp
+            client.start_build(projectName='ruleread-lms-qa') #
+            client.start_build(projectName='rulewrite-lms-qa')#
+            client.start_build(projectName='authenticationservice-qa') #
+            client.start_build(projectName='authenticationapi-lms-qa')#directory not defined on gcp
+            #client.start_build(projectName='devadminreact-lms-qa')
+            client.start_build(projectName='devadmin-react-s3-qa')
+            client.start_build(projectName='devadmin-lms-qa')
+            client.start_build(projectName='adapter-service-qa')
+            client.start_build(projectName='transaction-celery-test')
+            client.start_build(projectName='enroll-celery-test')
+            
+        else:
+          for directory in update_directories_names:
+            if directory == "coreApi":  
+                client.start_build(projectName='coreread-lms-qa')
+                client.start_build(projectName='coreapi-lms-qa')
+                client.start_build(projectName='corewrite-lms-qa')
+            elif directory == "discount-api":
+                client.start_build(projectName='discountapi-lms-qa')
+            elif directory == "transaction":
+                client.start_build(projectName='redeemapi-lms-qa') #
+                client.start_build(projectName='transactionread-lms-qa') #
+                client.start_build(projectName='transactionwrite-lms-qa')# directory not defined on gcp
+                client.start_build(projectName='transactionmiddleware-lms-qa')#
+                client.start_build(projectName='earnapi-lms-qa')
+                client.start_build(projectName='transaction-celery-test')
+            elif directory == "notification":
+                client.start_build(projectName='emailservice-lms-qa') #
+                client.start_build(projectName='notificationapi-lms-qa')
+            elif directory == "memberEnroll":
+                client.start_build(projectName='enrollapi-lms-qa') #
+                client.start_build(projectName='enrollread-lms-qa') #   
+                client.start_build(projectName='enrollwrite-lms-qa') #
+                client.start_build(projectName='enroll-celery-test')
+            elif directory == "graphql-api":
+                client.start_build(projectName='graphql-api-lms-qa') 
+            elif directory == "inquire-api":
+                client.start_build(projectName='inquire-lms-qa')
+            elif directory == "product":
+                client.start_build(projectName='productapi-lms-qa')
+                client.start_build(projectName='productservice-lms-qa') #directory not defined on gcp
+            elif directory == "rules":
+                client.start_build(projectName='ruleread-lms-qa') #
+                client.start_build(projectName='rulewrite-lms-qa')#
+            elif directory == "authentication":
+                client.start_build(projectName='authenticationservice-qa') #
+                client.start_build(projectName='authenticationapi-lms-qa')#directory not defined on gcp
+            elif directory == "react-admin":
+                client.start_build(projectName='devadminreact-lms-qa')
+                client.start_build(projectName='devadmin-react-s3-qa')
+            elif directory == 'emaar-admin':
+                client.start_build(projectName='devadmin-lms-qa')
+            elif directory == 'onboardingApp':
+                update_parameter_group("develop-pipelines-to-run",1)
+                update_parameter_group("develop-pipelines-completed",0)
+                client.start_build(projectName='lms-deployment-onboarding-app')
+    elif git_branch == "refs/heads/sandbox": # sandbox env has been disabled for now, 
+        if len(update_directories_names) == 0:
+            client.start_build(projectName='coreapi-lms-sandbox')
+            client.start_build(projectName='corewrite-lms-sandbox')
+            client.start_build(projectName='coreread-lms-sandbox')
+            client.start_build(projectName='discountapi-lms-sandbox')
+            client.start_build(projectName='redeemapi-lms-sandbox') #
+            client.start_build(projectName='transactionread-sandbox') #
+            client.start_build(projectName='transactionwrite-lms-sandbox')# directory not defined on gcp
+            client.start_build(projectName='transactionmiddleware-lms-sandbox')#
+            client.start_build(projectName='earnapi-lms-sandbox')
+            client.start_build(projectName='emailservice-lms-sandbox') #
+            client.start_build(projectName='notificationapi-lms-sandbox')
+            client.start_build(projectName='enrollapi-lms-sandbox') #
+            client.start_build(projectName='enrollread-lms-sandbox') #   
+            client.start_build(projectName='enrollwrite-lms-sandbox') #
+            client.start_build(projectName='graphql-api-lms-sandbox') 
+            client.start_build(projectName='inquire-lms-sandbox')
+            client.start_build(projectName='productapi-lms-sandbox')
+            client.start_build(projectName='productservice-lms-sandbox') #directory not defined on gcp
+            client.start_build(projectName='ruleread-lms-sandbox') #
+            client.start_build(projectName='rulewrite-lms-sandbox')#
+            client.start_build(projectName='authenticationservice-lms-sandbox') #
+            client.start_build(projectName='authenticationapi-lms-sandbox')#directory not defined on gcp
+            #client.start_build(projectName='devadminreact-lms-sandbox')
+            client.start_build(projectName='devadmin-react-s3-sandbox')
+            client.start_build(projectName='devadmin-lms-sandbox')
+            client.start_build(projectName='lms-sandbox-onboarding-app')
+        else:
+         for directory in update_directories_names:
+            if directory == "coreApi":  
+                client.start_build(projectName='coreapi-lms-sandbox')
+                client.start_build(projectName='corewrite-lms-sandbox')
+                client.start_build(projectName='coreread-lms-sandbox')
+            elif directory == "discount-api":
+                client.start_build(projectName='discountapi-lms-sandbox')
+            elif directory == "transaction":
+                client.start_build(projectName='redeemapi-lms-sandbox') #
+                client.start_build(projectName='transactionread-sandbox') #
+                client.start_build(projectName='transactionwrite-lms-sandbox')# directory not defined on gcp
+                client.start_build(projectName='transactionmiddleware-lms-sandbox')#
+                client.start_build(projectName='earnapi-lms-sandbox')
+            elif directory == "notification":
+                client.start_build(projectName='emailservice-lms-sandbox') #
+                client.start_build(projectName='notificationapi-lms-sandbox')
+            elif directory == "memberEnroll":
+                client.start_build(projectName='enrollapi-lms-sandbox') #
+                client.start_build(projectName='enrollread-lms-sandbox') #   
+                client.start_build(projectName='enrollwrite-lms-sandbox') #
+            elif directory == "graphql-api":
+                client.start_build(projectName='graphql-api-lms-sandbox') 
+            elif directory == "inquire-api":
+                client.start_build(projectName='inquire-lms-sandbox')
+            elif directory == "product":
+                client.start_build(projectName='productapi-lms-sandbox')
+                client.start_build(projectName='productservice-lms-sandbox') #directory not defined on gcp
+            elif directory == "rules":
+                client.start_build(projectName='ruleread-lms-sandbox') #
+                client.start_build(projectName='rulewrite-lms-sandbox')#
+            elif directory == "authentication":
+                client.start_build(projectName='authenticationservice-lms-sandbox') #
+                client.start_build(projectName='authenticationapi-lms-sandbox')#directory not defined on gcp
+            elif directory == "react-admin":
+                client.start_build(projectName='devadminreact-lms-sandbox')
+                client.start_build(projectName='devadmin-react-s3-sandbox')
+            elif directory == 'emaar-admin':
+                client.start_build(projectName='devadmin-lms-sandbox')
+            elif directory == 'onboardingApp':
+                client.start_build(projectName='lms-sandbox-onboarding-app')
+                #ipeline_to_run = pipeline_to_run + 1
+    elif git_branch == "refs/heads/develop":
+        print("aaaaaaaaaaaaaa")
+        #enable_eventbridge_rule("check_if_updated_services_of_develop_deployed")
+        print("aaaaaaabbbbbbbbbbbbbb")
+        pipeline_to_run = 0
+        if len(update_directories_names) == 0:
+            pipeline_to_run = pipeline_to_run + 25
+            client.start_build(projectName='coreapi-lms-development')
+            client.start_build(projectName='devadmin-project-lms-development')
+            client.start_build(projectName='corewrite-lms-development')
+            client.start_build(projectName='coreread-lms-deployment')
+            client.start_build(projectName='discountapi-lms-development')
+            client.start_build(projectName='redeemapi-lms-deployment') #
+            client.start_build(projectName='transactionread-lms-deployment') #
+            client.start_build(projectName='transactionwrite-lms-development')# directory not defined on gcp
+            client.start_build(projectName='transactionmiddleware-lms-deployment')#
+            client.start_build(projectName='earnapi-lms-deployment')
+            client.start_build(projectName='email-lms-deployment') #
+            client.start_build(projectName='notificationapi-lms-deployment')
+            client.start_build(projectName='enrollapi-lms-development') #
+            client.start_build(projectName='enrollread-lms-deveployment') #   
+            client.start_build(projectName='enrollwrite-lms-deployment') #
+            client.start_build(projectName='graphql-api-lms-deployment') 
+            client.start_build(projectName='inquire-api-lms-development')
+            client.start_build(projectName='productapi-lms-development')
+            client.start_build(projectName='productservice-lms-development') #directory not defined on gcp
+            client.start_build(projectName='ruleread-lms-deployment') #
+            client.start_build(projectName='rulewrite-lms-deployment')#
+            client.start_build(projectName='authenticationservice-lms-deployment') #
+            client.start_build(projectName='authenticationapi-lms-deployment')#directory not defined on gcp
+            client.start_build(projectName='devadminreact-lms-development')
+            client.start_build(projectName='lms-deployment-onboarding-app')
+            client.start_build(projectName='transaction-celery-develop')
+            client.start_build(projectName='enroll-celery')
+            client.start_build(projectName='productservice-write-lms-development')
+        else: 
+         for directory in update_directories_names:
+            print("directoryyyy", directory)
+            if directory == "coreApi":  
+                print("coreapiii")
+                client.start_build(projectName='coreapi-lms-development')
+                client.start_build(projectName='corewrite-lms-development')
+                client.start_build(projectName='coreread-lms-deployment')
+                pipeline_to_run = pipeline_to_run + 3
+                
+            elif directory == "discount-api":
+                client.start_build(projectName='discountapi-lms-development')
+                pipeline_to_run = pipeline_to_run + 1
+            elif directory == "transaction":
+                print("transactionnnnnnnnnnnnnnn")
+                client.start_build(projectName='redeemapi-lms-deployment') #
+                client.start_build(projectName='transactionread-lms-deployment') #
+                client.start_build(projectName='transactionwrite-lms-development')# directory not defined on gcp
+                client.start_build(projectName='transactionmiddleware-lms-deployment')#
+                client.start_build(projectName='earnapi-lms-deployment')
+                client.start_build(projectName='transaction-celery-develop')
+                pipeline_to_run = pipeline_to_run + 6
+                
+            elif directory == "notification":
+                client.start_build(projectName='email-lms-deployment') #
+                client.start_build(projectName='notificationapi-lms-deployment')
+                pipeline_to_run = pipeline_to_run + 2
+                
+            elif directory == "memberEnroll":
+                print("enrolll")
+                client.start_build(projectName='enrollapi-lms-development') 
+                client.start_build(projectName='enrollread-lms-deveployment') #  
+                client.start_build(projectName='enrollwrite-lms-deployment') 
+                client.start_build(projectName='enroll-celery')
+                pipeline_to_run = pipeline_to_run + 4
+                
+            elif directory == "graphql-api":
+                client.start_build(projectName='graphql-api-lms-deployment') 
+                pipeline_to_run = pipeline_to_run + 1
+                
+            elif directory == "inquire-api":
+                client.start_build(projectName='inquire-api-lms-development')
+                pipeline_to_run = pipeline_to_run + 1
+                
+            elif directory == "product":
+                client.start_build(projectName='productapi-lms-development')
+                client.start_build(projectName='productservice-lms-development') #
+                client.start_build(projectName='productservice-write-lms-development')
+                pipeline_to_run = pipeline_to_run + 2
+               
+            elif directory == "rules":
+                client.start_build(projectName='ruleread-lms-deployment') #
+                client.start_build(projectName='rulewrite-lms-deployment')#
+                pipeline_to_run = pipeline_to_run + 2
+                
+            elif directory == "authentication":
+                client.start_build(projectName='authenticationservice-lms-deployment') #
+                client.start_build(projectName='authenticationapi-lms-deployment')
+                pipeline_to_run = pipeline_to_run + 2
+            elif directory == "react-admin":
+                print("reactttttttt")
+                client.start_build(projectName='devadminreact-lms-development')
+                pipeline_to_run = pipeline_to_run + 1
+                print("react333333")
+                
+            elif directory == 'loyalty-admin':
+                client.start_build(projectName='devadmin-project-lms-development')
+                pipeline_to_run = pipeline_to_run + 1
+                
+            elif directory == 'onboardingApp':
+                client.start_build(projectName='lms-deployment-onboarding-app')
+                pipeline_to_run = pipeline_to_run + 1
+            #update_parameter_group("develop-pipelines-to-run",pipeline_to_run)
+            #update_parameter_group("develop-pipelines-completed",0) 
+                
+    elif git_branch == "refs/heads/stage": # sandbox env has been disabled for now, 
+        if len(update_directories_names) == 0:
+            client.start_build(projectName='coreapi-lms-stage')
+            client.start_build(projectName='corewrite-lms-stage')
+            client.start_build(projectName='coreread-lms-sandbox')
+            client.start_build(projectName='discountapi-lms-stage')
+            client.start_build(projectName='redeemapi-lms-stage') #
+            client.start_build(projectName='transactionread-lms-stage') #
+            client.start_build(projectName='transactionwrite-lms-stage')# directory not defined on gcp
+            client.start_build(projectName='transactionmiddleware-lms-stagee')#
+            client.start_build(projectName='earnapi-lms-stage')
+            client.start_build(projectName='email-lms-stage') #
+            client.start_build(projectName='notificationapi-lms-stage')
+            client.start_build(projectName='enrollapi-lms-stage') #
+            client.start_build(projectName='enrollread-lms-sandbox') #   
+            client.start_build(projectName='enrollwrite-lms-stage') #
+            client.start_build(projectName='graphql-api-lms-stage') 
+            client.start_build(projectName='inquire-api-lms-stage')
+            client.start_build(projectName='ruleread-lms-stagee') #
+            client.start_build(projectName='rulewrite-lms-sandbox')#
+            client.start_build(projectName='authenticationservice-lms-stage') #
+            client.start_build(projectName='authenticationapi-lms-stage')#directory not defined on gcp
+            client.start_build(projectName='devadminreact-lms-stage')
+            client.start_build(projectName='devadmin-react-s3-stage')
+            client.start_build(projectName='devadmin-project-lms-stage')
+            client.start_build(projectName='rulewrite-lms-stage')
+            client.start_build(projectName='coreread-lms-stage')
+            client.start_build(projectName='productservice-lms-stage')
+            client.start_build(projectName='enrollread-lms-stage')
+            client.start_build(projectName='productapi-lms-stage')
+            client.start_build(projectName='lms-stage-onboarding-app')
+            
+            
+            
+            
+        else:
+         for directory in update_directories_names:
+            if directory == "coreApi":  
+                client.start_build(projectName='coreapi-lms-stage')
+                client.start_build(projectName='corewrite-lms-stage')
+                client.start_build(projectName='coreread-lms-stage')
+            elif directory == "discount-api":
+                client.start_build(projectName='discountapi-lms-stage')
+            elif directory == "transaction":
+                client.start_build(projectName='redeemapi-lms-stage') #
+                client.start_build(projectName='transactionread-lms-stage') #
+                client.start_build(projectName='transactionwrite-lms-stage')# directory not defined on gcp
+                client.start_build(projectName='transactionmiddleware-lms-stagee')#
+                client.start_build(projectName='earnapi-lms-stage')
+            elif directory == "notification":
+                client.start_build(projectName='email-lms-stage') #
+                client.start_build(projectName='notificationapi-lms-stage')
+            elif directory == "memberEnroll":
+                client.start_build(projectName='enrollapi-lms-stage') #
+                client.start_build(projectName='enrollread-lms-stage') #   
+                client.start_build(projectName='enrollwrite-lms-stage') #
+            elif directory == "graphql-api":
+                client.start_build(projectName='graphql-api-lms-stage') 
+            elif directory == "inquire-api":
+                client.start_build(projectName='inquire-api-lms-stage')
+            elif directory == "product":
+                client.start_build(projectName='productapi-lms-stage')
+                client.start_build(projectName='productservice-lms-stage') #directory not defined on gcp
+            elif directory == "rules":
+                client.start_build(projectName='ruleread-lms-stagee') #
+                client.start_build(projectName='rulewrite-lms-stage')#
+            elif directory == "authentication":
+                client.start_build(projectName='authenticationservice-lms-stage') #
+                client.start_build(projectName='authenticationapi-lms-stage')#directory not defined on gcp
+            elif directory == "react-admin":
+                client.start_build(projectName='devadminreact-lms-stage')
+                client.start_build(projectName='devadmin-react-s3-stage')
+            elif directory == 'emaar-admin':
+                client.start_build(projectName='devadmin-project-lms-stage')
+            elif directory == 'onboardingApp':
+                update_parameter_group("develop-pipelines-to-run",1)
+                update_parameter_group("develop-pipelines-completed",0)
+                client.start_build(projectName='lms-stage-onboarding-app')
+    
+def update_parameter_group(key, number):
+        client = boto3.client('ssm')
+        response = client.put_parameter(
+        Name=key,
+        Value=str(number),
+        Overwrite=True,
+    )   
+        print("response", response)
+        
+
+def enable_eventbridge_rule(rule_name):
+    client = boto3.client('events')
+    response = client.enable_rule(
+    Name=rule_name)
+ 
+def validate_if_proto_directory_updated():
+    if ("protos" in update_directories_names):
+            update_directories_names.clear();
+    else:
+        pass;

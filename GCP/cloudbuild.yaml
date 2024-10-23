@@ -1,0 +1,9 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  env:
+  - 'BUILD=$BUILD_ID'
+  args: ['build', '--tag=asia.gcr.io/PROJECT_NAME/resource_scheduler_name:$BUILD_ID', '.']
+- name: 'gcr.io/cloud-builders/docker'
+  args: ["push", "asia.gcr.io/PROJECT_NAME/resource_scheduler_name:$BUILD_ID"]
+- name: 'gcr.io/cloud-builders/gcloud'
+  args: ['beta', 'run', 'deploy', 'resourcescheduler_name', '--image', 'asia.gcr.io/PROJECT_NAME/resource_scheduler_name:$BUILD_ID', '--region', 'us-central1', '--platform', 'managed', '--quiet']

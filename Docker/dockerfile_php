@@ -1,0 +1,44 @@
+FROM 559165824181.dkr.ecr.us-east-2.amazonaws.com/php:latest
+
+RUN docker-php-ext-install mysqli
+
+RUN apt-get update -y && apt-get install -y libpng-dev libonig-dev libcurl4-openssl-dev zip unzip
+
+
+
+#RUN apt-get update -y && apt-get install php5-gd
+
+RUN docker-php-ext-install gd 
+RUN docker-php-ext-install mbstring 
+RUN docker-php-ext-install curl
+# Setup Apache2 config
+COPY . /var/www/public
+
+#ARG PORT
+ENV PORT=8080
+
+COPY 000-default.conf /etc/apache2/sites-available/000-default.conf
+#COPY . /var/www/public
+
+RUN sed -i 's/80/${PORT}/g' /etc/apache2/sites-available/000-default.conf /etc/apache2/ports.conf 
+RUN cd
+RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+RUN php -r "if (hash_file('sha384', 'composer-setup.php') === '906a84df04cea2aa72f40b5f787e49f22d4c2f19492ac310e8cba5b96ac8b64115ac402c8cd292b8a03482574915d1a8') { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+RUN php composer-setup.php
+RUN php -r "unlink('composer-setup.php');"
+RUN mv composer.phar /usr/local/bin/composer
+COPY . /var/www/public/
+WORKDIR /var/www/public/api
+RUN ls
+
+RUN composer --version
+RUN composer install
+RUN composer update
+RUN a2enmod rewrite
+# use your users $UID and $GID below
+RUN groupadd apache-www-volume -g 1000
+RUN useradd apache-www-volume -u 1000 -g 1000
+WORKDIR /var/www/public/docs/php
+RUN php swagger.phar ../../api/application/controllers -b bootstrap.php -o ../json
+
+CMD ["apache2-foreground"]

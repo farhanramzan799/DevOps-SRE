@@ -1,0 +1,120 @@
+----------
+Function1:
+----------
+import json
+import boto3
+
+def lambda_handler(event, context):
+    create_db_instance_read_replica("shopdesk-dev-read-replica", "shopdesk-dev-mysql-db", "db.t2.medium", "us-east-2b", 3306, "default:mysql-5-7")    
+    return {
+        'statusCode': 201,
+        'body': json.dumps('READ REPLICA CREATED SUCCESSFULLY')
+    }
+
+
+def create_db_instance_read_replica(instance_name, source_instance, db_instance_class, A_zone, port, option_group_name):
+    client= boto3.client('rds')
+    response = client.create_db_instance_read_replica(
+    DBInstanceIdentifier=instance_name,
+    SourceDBInstanceIdentifier=source_instance,
+    DBInstanceClass=db_instance_class,
+    AvailabilityZone=A_zone,
+    Port=port,
+    MultiAZ=False,
+    AutoMinorVersionUpgrade=False,
+    OptionGroupName=option_group_name
+
+)
+
+---------
+Function2:
+-------
+import json
+import boto3
+
+def lambda_handler(event, context):
+    delete_db_instance_read_replica("shopdesk-dev-read-replica")
+    
+    return {
+        'statusCode': 204,
+        'body': json.dumps('READ REPLICA DELETED SUCCESSFULLY')
+    }
+
+
+
+
+def delete_db_instance_read_replica(instance_name):
+    client= boto3.client('rds')
+    response = client.delete_db_instance(
+    DBInstanceIdentifier=instance_name,
+    SkipFinalSnapshot=True,
+ )
+ 
+
+ 
+------
+Function3:
+------
+import json
+import boto3
+
+
+def start_rds_instances(Instance):
+    client= boto3.client('rds')
+    response = client.start_db_instance(
+    DBInstanceIdentifier=Instance
+    
+)
+
+ 
+
+def lambda_handler(event, context):
+    start_rds_instances("shopdesk-dev-mysql-db")
+    
+    
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps('PRIMARY INSTANCE ARE STARTED NOW!')
+    }
+
+
+---------
+Function4:
+---------
+import json
+import boto3
+
+
+def stop_rds_instances(Instance):
+    client= boto3.client('rds')
+    response = client.stop_db_instance(
+    DBInstanceIdentifier=Instance
+    
+)
+
+ 
+
+def lambda_handler(event, context):
+    #stop_rds_instances("lms-authentication-qa-env")
+    #stop_rds_instances("lms-core-qa-env")
+    #stop_rds_instances("lms-member-qa-env")
+    #stop_rds_instances("lms-notifications-qa-env")
+    #stop_rds_instances("lms-product-qa-env")
+    #stop_rds_instances("lms-qa-member-gnc")
+    #stop_rds_instances("lms-rules-qa-env")
+    #stop_rds_instances("lms-transaction-qa-env")
+    #stop_rds_instances("qa-shopdev-lms")
+    #stop_rds_instances("lms-member-qa-fabric")
+    stop_rds_instances("shopdesk-dev-mysql-db")
+    
+    
+    
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps('PRIMARY INSTANCE ARE STOPPED NOW!')
+    }
+
+
+-----------

@@ -1,0 +1,44 @@
+
+#docker logs
+docker logs image-id
+
+#docker run usign volume:
+docker run -d -t -i -p 8080:8080 -v /var/jenkins_home:/var/jenkins_home dawoodabbas26/jenkins:latest
+
+#remove containers:
+docker rm -f $(docker ps -aq)
+
+#remove images:
+docker rmi -f $(docker ps -aq)
+
+#reboot machine
+sudo reboot
+
+#check process running on port
+lsof -i:8080
+
+#kill the process on specific port
+kill $(lsof -t -i:8080)
+kill -9 $(lsof -t -i:8080)
+
+#to find: 
+find / -type d -name 'pipeline'
+
+#Lsblk is used to display details about block devices
+lsblk
+
+#will show the file system disk space statistics in “human-readable” format, means it gives the details in bytes, megabytes, and gigabyte.
+df -h
+
+#to create public key
+ssh-keygen -y -f key.pem > key.pub
+
+#if permission issue for pem:
+sudo chmod 600 key.pem
+
+
+# to replace in powershell:
+(Get-Content test.txt) -replace 'abc', 'bad' | Out-File -encoding ASCII test.txt
+
+# to replace in bash:
+sed -i "s/minio-accesskey/$(minio-accesskey)/g;s/minio-secretkey/$(minio-secretkey)/g;" "../../deploy/.stages/app.dev.yaml"

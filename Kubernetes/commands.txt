@@ -1,0 +1,18 @@
+# debug_container_for_distroless_image
+kubectl debug -it pods/frontend --image=debug-image
+
+# delete_evcited_pods
+kubectl -n default delete pods --field-selector=status.phase=Failed
+
+# delete zombie_namespace
+kubectl get namespace $NAMESPACE -o json > $NAMESPACE.json
+sed -i -e 's/"kubernetes"//' $NAMESPACE.json
+kubectl replace --raw "/api/v1/namespaces/$NAMESPACE/finalize" -f ./$NAMESPACE.json
+
+# scale down daemonset
+
+kubectl -n <namespace> patch daemonset <name-of-daemon-set> -p '{"spec": {"template": {"spec": {"nodeSelector": {"non-existing": "true"}}}}}'
+
+//scale up daemonset
+
+kubectl -n <namespace> patch daemonset <name-of-daemon-set> --type json -p='[{"op": "remove", "path": "/spec/template/spec/nodeSelector/non-existing"}]'

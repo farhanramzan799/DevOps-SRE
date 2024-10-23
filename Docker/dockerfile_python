@@ -1,0 +1,61 @@
+# base image
+FROM python:3.8
+# setup environment variable
+ENV DockerHOME=/home/PROJECT
+ENV SERVICE_NAME=SERVICE_NAME
+ENV SECRET_TOKEN=TOKEN
+ENV SERVER_URL=https://33ca38581f3544aa8ab63ecde16d4357.apm.us-west1.gcp.cloud.es.io:443
+ENV ENVIRONMENT=production
+# set work directory
+RUN mkdir -p $DockerHOME
+
+# where your code lives
+WORKDIR $DockerHOME
+
+# set environment variables
+# ENV PYTHONDONTWRITEBYTECODE 1
+# ENV PYTHONUNBUFFERED 1
+
+# install dependencies
+RUN pip install --upgrade pip
+
+# copy whole project to your docker home directory.
+COPY . $DockerHOME
+# run this command to install all dependencies
+RUN pip install -r requirements.txt
+# port where the Django app runs
+EXPOSE 8000
+# start server
+CMD python manage.py runserver 0.0.0.0:8000
+
+
+------------------------------------------
+
+FROM 189605259052.dkr.ecr.us-east-2.amazonaws.com/python
+##FROM python:3.7.4
+# Set environment variables
+ENV PYTHONUNBUFFERED 1
+
+COPY requirements.txt /
+
+# Upgrade pip
+RUN pip install pip==21.3.1
+
+# Install dependencies.
+RUN pip install --no-cache-dir -r /requirements.txt
+
+# Set work directory.
+RUN mkdir /code
+WORKDIR /code
+
+# Copy project code.
+COPY . /code/
+RUN apt update
+RUN apt install nginx -y
+RUN cp nginx.conf /etc/nginx/
+RUN cp OR.com.conf /etc/nginx/sites-available
+RUN service nginx start
+
+# RUN python manage.py makemigrations && python manage.py migrate
+
+# CMD export ENV_Setting=development && python manage.py makemigrations && python manage.py migrate && python manage.py runserver

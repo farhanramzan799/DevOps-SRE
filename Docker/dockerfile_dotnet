@@ -1,0 +1,20 @@
+FROM mcr.microsoft.com/dotnet/aspnet:7.0.0-bullseye-slim AS base
+WORKDIR /app
+EXPOSE 80
+EXPOSE 81
+
+FROM mcr.microsoft.com/dotnet/sdk:7.0.100-bullseye-slim AS build
+WORKDIR /src
+COPY ["Services/Fees/Calrom.Fees.Api/Calrom.Fees.Api.csproj", "Services/Fees/Calrom.Fees.Api/"]
+RUN dotnet restore "Services/Fees/Calrom.Fees.Api/Calrom.Fees.Api.csproj"
+COPY . .
+WORKDIR "/src/Services/Fees/Calrom.Fees.Api"
+RUN dotnet build "Calrom.Fees.Api.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "Calrom.Fees.Api.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "Calrom.Fees.Api.dll"]
