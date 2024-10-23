@@ -52,7 +52,7 @@ In order to set up/ mount the logs to a new-relic from any instance or ECS clust
 
     It is recommended to all Golden Signals while setting up the logging
 
-curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash && sudo NEW_RELIC_API_KEY=NRAK-5EZW90AN4XCK8S5A6VOW1DP86IH NEW_RELIC_ACCOUNT_ID=3283027 /usr/local/bin/newrelic install
+curl -Ls https://download.newrelic.com/install/newrelic-cli/scripts/install.sh | bash && sudo NEW_RELIC_API_KEY=NEW_RELIC_API_KEY NEW_RELIC_ACCOUNT_ID=NEW_RELIC_ACCOUNT_ID /usr/local/bin/newrelic install
     
     
     
