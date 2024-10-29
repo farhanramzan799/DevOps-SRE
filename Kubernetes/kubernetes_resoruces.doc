@@ -1,0 +1,482 @@
+Kubernetes api resources:
+
+1) Binding:
+
+
+A role binding grants the permissions defined in a role to a user or set of users. It holds a list of subjects (users, groups, or service accounts), and a reference to the role being granted. A RoleBinding grants permissions within a specific namespace whereas a ClusterRoleBinding grants that access cluster-wide.
+Role-based access control (RBAC) is a method of regulating access to computer or network resources based on the roles of individual users within your organization.
+Role and ClusterRole
+An RBAC Role or ClusterRole contains rules that represent a set of permissions. Permissions are purely additive (there are no "deny" rules).
+A Role always sets permissions within a particular namespace; when you create a Role, you have to specify the namespace it belongs in.
+ClusterRole, by contrast, is a non-namespaced resource. The resources have different names (Role and ClusterRole) because a Kubernetes object always has to be either namespaced or not namespaced; it can't be both.
+ClusterRoles have several uses. You can use a ClusterRole to:
+define permissions on namespaced resources and be granted within individual namespace(s)
+define permissions on namespaced resources and be granted across all namespaces
+define permissions on cluster-scoped resources
+If you want to define a role within a namespace, use a Role; if you want to define a role cluster-wide, use a ClusterRole.
+
+
+
+2) Component statuses: 
+
+A Kubernetes component status describes the high-level health of one of several kubernetes essential cluster services. An unhealthy component can cause issues including incorrectly scheduled pods and not recognizing all nodes in the cluster.
+
+Components:
+
+
+kubeapi-server
+The API server is a component of the Kubernetes control plane that exposes the Kubernetes API. The API server is the front end for the Kubernetes control plane.
+The main implementation of a Kubernetes API server is kube-apiserver. kube-apiserver is designed to scale horizontally—that is, it scales by deploying more instances. You can run several instances of kube-apiserver and balance traffic between those instances.
+etcd
+Consistent and highly-available key value store used as Kubernetes' backing store for all cluster data.
+If your Kubernetes cluster uses etcd as its backing store, make sure you have a back up plan for those data.
+You can find in-depth information about etcd in the official documentation.
+kube-scheduler
+Control plane component that watches for newly created Pods with no assigned node, and selects a node for them to run on.
+Factors taken into account for scheduling decisions include: individual and collective resource requirements, hardware/software/policy constraints, affinity and anti-affinity specifications, data locality, inter-workload interference, and deadlines.
+kube-controller-manager
+Control plane component that runs controller processes.
+Logically, each controller is a separate process, but to reduce complexity, they are all compiled into a single binary and run in a single process.
+Some types of these controllers are:
+Node controller: Responsible for noticing and responding when nodes go down.
+Job controller: Watches for Job objects that represent one-off tasks, then creates Pods to run those tasks to completion.
+Endpoints controller: Populates the Endpoints object (that is, joins Services & Pods).
+Service Account & Token controllers: Create default accounts and API access tokens for new namespaces.
+
+
+cloud-controller-manager
+A Kubernetes control plane component that embeds cloud-specific control logic. The cloud controller manager lets you link your cluster into your cloud provider's API, and separates out the components that interact with that cloud platform from components that only interact with your cluster.
+The cloud-controller-manager only runs controllers that are specific to your cloud provider. If you are running Kubernetes on your own premises, or in a learning environment inside your own PC, the cluster does not have a cloud controller manager.
+As with the kube-controller-manager, the cloud-controller-manager combines several logically independent control loops into a single binary that you run as a single process. You can scale horizontally (run more than one copy) to improve performance or to help tolerate failures.
+The following controllers can have cloud provider dependencies:
+Node controller: For checking the cloud provider to determine if a node has been deleted in the cloud after it stops responding
+Route controller: For setting up routes in the underlying cloud infrastructure
+Service controller: For creating, updating and deleting cloud provider load balancers
+
+
+
+
+
+
+
+
+3) Node Components:
+Node components run on every node, maintaining running pods and providing the Kubernetes runtime environment.
+kubelet
+An agent that runs on each node in the cluster. It makes sure that containers are running in a Pod.
+The kubelet takes a set of PodSpecs that are provided through various mechanisms and ensures that the containers described in those PodSpecs are running and healthy. The kubelet doesn't manage containers which were not created by Kubernetes.
+kube-proxy
+kube-proxy is a network proxy that runs on each node in your cluster, implementing part of the Kubernetes Service concept.
+kube-proxy maintains network rules on nodes. These network rules allow network communication to your Pods from network sessions inside or outside of your cluster.
+kube-proxy uses the operating system packet filtering layer if there is one and it's available. Otherwise, kube-proxy forwards the traffic itself.
+Container runtime
+The container runtime is the software that is responsible for running containers.
+Kubernetes supports container runtimes such as containerd, CRI-O, and any other implementation of the Kubernetes CRI (Container Runtime Interface).
+
+
+4) ConfigMaps:
+A ConfigMap is an API object used to store non-confidential data in key-value pairs. Pods can consume ConfigMaps as environment variables, command-line arguments, or as configuration files in a volume.
+A ConfigMap is not designed to hold large chunks of data. The data stored in a ConfigMap cannot exceed 1 MiB. If you need to store settings that are larger than this limit, you may want to consider mounting a volume or use a separate database or file service.
+
+
+
+
+There are four different ways that you can use a ConfigMap to configure a container inside a Pod:
+Inside a container command and args
+Environment variables for a container
+Add a file in read-only volume, for the application to read
+Write code to run inside the Pod that uses the Kubernetes API to read a ConfigMap
+
+
+5) Endpoints:
+When Kubernetes processes a service description, and if the service selector matches a pod label, Kubernetes will automatically create an Endpoints object with the same name as the service, which stores the pod's IP address and port.
+
+
+6) Events:
+A Kubernetes event is an object that shows what’s happening inside a cluster, node, pod, or container. These objects are usually generated in response to changes that occur inside your K8s system. The Kubernetes API Server enables all core components to create these events.
+Types:
+Failed Events
+Failed events are generated when K8s fails to create a container or other resource. This could happen due to faulty images, typing mistakes, insufficient reasons, and many different reasons. There’s an almost certain chance that failed events will lead to broken functionalities in your app; hence monitoring for these types of events is essential. 
+FailedToCreateContainer, FailedToStartContainer, FailedToPullImage, FailedToKillPod, etc. are some examples of failed events.
+
+
+Evicted Events
+Evicted events occur quite commonly since K8s often steps in and evicts rogue containers and pods (those consuming large amounts of resources unnecessarily). While this is expected behavior, you still need to look out for the occurrence of these events. A high number of evictions indicates that you have not placed proper thresholds in your system. More often than not, K8s might not be able to identify the best entities to evict, resulting in irrelevant evictions leading to loss of uptime.
+Node-Specific Events
+Many K8s events are based around nodes and their life cycle activities. You might have already noticed NodeHasSufficientMemory, NoteHasSufficientPID, NodeReady, and other events in the example from above. These convey status changes related to nodes and come in handy when looking for the source of the system’s erratic behavior.
+Storage-Specific Events
+All cloud-based apps utilize storage in one way or another. K8s mainly connects to external services like AWS, GCP, or internal resources from Docker for storage. There can be instances where a pod might fail to mount storage resources. You should look out for FailedMount and FailedAttachVolume events to identify cases of faulty storage mounting.
+Scheduling Events
+Scheduling events provide insights into the efficiency of your resource management strategy. If you do not manage your resources well, there might not be any left to allocate to new pods. Insufficient memory or CPU is usually the culprit, and you would receive a FailedScheduling event in most cases with a clear description of why the scheduling could not happen.
+
+
+7) Limit-Range:
+
+
+There is a concern that one Pod or Container could monopolize all available resources. A LimitRange is a policy to constrain resource allocations (to Pods or Containers) in a namespace. A LimitRange provides constraints that can: Enforce minimum and maximum compute resources usage per Pod or Container in a namespace.
+A LimitRange provides constraints that can:
+Enforce minimum and maximum compute resources usage per Pod or Container in a namespace.
+Enforce minimum and maximum storage request per PersistentVolumeClaim in a namespace.
+Enforce a ratio between request and limit for a resource in a namespace.
+Set default request/limit for compute resources in a namespace and automatically inject them to Containers at runtime.
+
+
+8) Namespace:
+
+
+In Kubernetes, namespaces provides a mechanism for isolating groups of resources within a single cluster. Names of resources need to be unique within a namespace, but not across namespaces.
+
+9) Nodes:
+A Node is a worker machine in Kubernetes and may be either a virtual or a physical machine, depending on the cluster. Each Node is managed by the control plane. A Node can have multiple pods, and the Kubernetes control plane automatically handles scheduling the pods across the Nodes in the cluster.Officially, Kubernetes claims to support clusters with up to 5000 nodes. However, in practice, 500 nodes may already pose non-trivial challenges.Every Kubernetes Node runs at least:
+Kubelet, a process responsible for communication between the Kubernetes control plane and the Node; it manages the Pods and the containers running on a machine.
+A container runtime (like Docker) responsible for pulling the container image from a registry, unpacking the container, and running the application.
+
+
+10-11) PERSISTENCEVOLUMECLAIMS and PERSISTENCEVOLUME:
+
+A PersistentVolume (PV) is a piece of storage in the cluster that has been provisioned by an administrator or dynamically provisioned using Storage Classes. It is a resource in the cluster just like a node is a cluster resource. PVs are volume plugins like Volumes, but have a lifecycle independent of any individual Pod that uses the PV. This API object captures the details of the implementation of the storage, be that NFS, iSCSI, or a cloud-provider-specific storage system.
+A PersistentVolumeClaim (PVC) is a request for storage by a user. It is similar to a Pod. Pods consume node resources and PVCs consume PV resources. Pods can request specific levels of resources (CPU and Memory). Claims can request specific size and access modes (e.g., they can be mounted ReadWriteOnce, ReadOnlyMany or ReadWriteMany, see AccessModes).
+While PersistentVolumeClaims allow a user to consume abstract storage resources, it is common that users need PersistentVolumes with varying properties, such as performance, for different problems. Cluster administrators need to be able to offer a variety of PersistentVolumes that differ in more ways than size and access modes, without exposing users to the details of how those volumes are implemented. For these needs, there is the StorageClass resource.
+
+
+12) Pods:
+Pods are the smallest, most basic deployable objects in Kubernetes. A Pod represents a single instance of a running process in your cluster. Pods contain one or more containers, such as Docker containers. When a Pod runs multiple containers, the containers are managed as a single entity and share the Pod's resources.
+
+
+13) Pod Template:
+Controllers for workload resources create Pods from a pod template and manage those Pods on your behalf.
+PodTemplates are specifications for creating Pods, and are included in workload resources such as Deployments, Jobs, and DaemonSets.
+Each controller for a workload resource uses the PodTemplate inside the workload object to make actual Pods. The PodTemplate is part of the desired state of whatever workload resource you used to run your app.
+
+
+14)Replication Controller:
+
+
+
+Replication Controller is one of the key features of Kubernetes, which is responsible for managing the pod lifecycle. It is responsible for making sure that the specified number of pod replicas are running at any point of time.
+
+
+
+15) Resource Quotas:
+When several users or teams share a cluster with a fixed number of nodes, there is a concern that one team could use more than its fair share of resources.
+Resource quotas are a tool for administrators to address this concern.
+A resource quota, defined by a ResourceQuota object, provides constraints that limit aggregate resource consumption per namespace. It can limit the quantity of objects that can be created in a namespace by type, as well as the total amount of compute resources that may be consumed by resources in that namespace.
+Resource quotas work like this:
+Different teams work in different namespaces. Currently this is voluntary, but support for making this mandatory via ACLs is planned.
+The administrator creates one ResourceQuota for each namespace.
+Users create resources (pods, services, etc.) in the namespace, and the quota system tracks usage to ensure it does not exceed hard resource limits defined in a ResourceQuota.
+If creating or updating a resource violates a quota constraint, the request will fail with HTTP status code 403 FORBIDDEN with a message explaining the constraint that would have been violated.
+If quota is enabled in a namespace for compute resources like cpu and memory, users must specify requests or limits for those values; otherwise, the quota system may reject pod creation. Hint: Use the LimitRanger admission controller to force defaults for pods that make no compute resource requirements.
+
+
+16) Secrets:
+A Secret is an object that contains a small amount of sensitive data such as a password, a token, or a key. Secrets are similar to ConfigMaps but are specifically intended to hold confidential data.
+Uses for Secrets
+There are three main ways for a Pod to use a Secret:
+As files in a volume mounted on one or more of its containers.
+As container environment variable.
+By the kubelet when pulling images for the Pod.
+Individual secrets are limited to 1MiB in size
+
+17) Service Account:
+A service account provides an identity for processes that run in a Pod.
+It is used to authenticate machine level processes to get access to our Kubernetes cluster. The API server is responsible for such authentication to the processes running in the pod. An application like  Prometheus accessing the cluster to monitor it is a type of service account.
+A service account provides an identity for processes that run in a Pod.
+When to use Kubernetes service accounts
+Kubernetes service accounts let you give an identity to your Pods, which can be used to:
+Authenticate Pods to the Kubernetes API server, allowing the Pods to read and manipulate Kubernetes API objects (for example, a CI/CD pipeline that deploys applications to your cluster).
+Authenticate Pods to Google Cloud resources through Workload Identity, allowing Pods to act as an IAM service account. This allows you to give fine-grained identity and authorization to Pods when they need access to Google Cloud APIs.
+
+
+18) Service:
+An abstract way to expose an application running on a set of Pods as a network service.
+With Kubernetes you don't need to modify your application to use an unfamiliar service discovery mechanism. Kubernetes gives Pods their own IP addresses and a single DNS name for a set of Pods, and can load-balance across them.
+SERVICE types:
+
+There are four types of Kubernetes services — ClusterIP, NodePort, LoadBalancer and ExternalName. The type property in the Service's spec determines how the service is exposed to the network. If you don’t specify the service type in the yaml it will create service as a ClusterIP by default.
+
+
+ClusterIP
+NodePort
+LoadBalancer
+ExternalName
+ClusterIP is the default and most common service type.
+The NodePort service serves as the external entry point for incoming requests for your app.
+It exposes the Service externally using a cloud provider’s load balancer.
+Services of type ExternalName map a Service to a DNS name.
+Kubernetes will assign a cluster-internal IP address to ClusterIP service. This makes the service only reachable within the cluster.
+Node port must be in the range of 30000–32767.
+Any public IP will be assigned within the cluster.
+Will be accessible through DNS name.
+Type: ClusterIP
+Type: NodePort
+Type: LoadBalancer
+Type: ExternalName
+
+
+1. ClusterIP
+ClusterIP is the default and most common service type.
+Kubernetes will assign a cluster-internal IP address to ClusterIP service. This makes the service only reachable within the cluster.
+You cannot make requests to service (pods) from outside the cluster.
+You can optionally set cluster IP in the service definition file.
+2. NodePort
+NodePort service is an extension of ClusterIP service. A ClusterIP Service, to which the NodePort Service routes, is automatically created.
+It exposes the service outside of the cluster by adding a cluster-wide port on top of ClusterIP.
+NodePort exposes the service on each Node’s IP at a static port (the NodePort). Each node proxies that port into your Service. So, external traffic has access to fixed port on each Node. It means any request to your cluster on that port gets forwarded to the service.
+You can contact the NodePort Service, from outside the cluster, by requesting <NodeIP>:<NodePort>.
+Node port must be in the range of 30000–32767. Manually allocating a port to the service is optional. If it is undefined, Kubernetes will automatically assign one.
+If you are going to choose node port explicitly, ensure that the port was not already used by another service.
+3. LoadBalancer
+LoadBalancer service is an extension of NodePort service. NodePort and ClusterIP Services, to which the external load balancer routes, are automatically created.
+It integrates NodePort with cloud-based load balancers.
+It exposes the Service externally using a cloud provider’s load balancer.
+Each cloud provider (AWS, Azure, GCP, etc) has its own native load balancer implementation. The cloud provider will create a load balancer, which then automatically routes requests to your Kubernetes Service.
+Traffic from the external load balancer is directed at the backend Pods. The cloud provider decides how it is load balanced.
+The actual creation of the load balancer happens asynchronously.
+Every time you want to expose a service to the outside world, you have to create a new LoadBalancer and get an IP address.
+4. ExternalName
+Services of type ExternalName map a Service to a DNS name, not to a typical selector such as my-service.
+You specify these Services with the `spec.externalName` parameter.
+It maps the Service to the contents of the externalName field (e.g. foo.bar.example.com), by returning a CNAME record with its value.
+No proxying of any kind is established.
+Use Cases
+This is commonly used to create a service within Kubernetes to represent an external datastore like a database that runs externally to Kubernetes.
+You can use that ExternalName service (as a local service) when Pods from one namespace to talk to a service in another namespace.
+
+
+19) Challenges:
+Kubenetes certificate challenges come in place when a certificate fails.
+It uses apiversion:  acme.cert-manager.io/v1alpha3   
+
+
+20) Orders:
+Kubenetes certificate places order for certifiacte.
+It uses apiversion:  acme.cert-manager.io/v1alpha3
+
+21-22) validating admission webhook and mutating admission webhook:
+Admission webhooks are HTTP callbacks that receive admission requests and do something with them. You can define two types of admission webhooks, validating admission webhook and mutating admission webhook. Mutating admission webhooks are invoked first, and can modify objects sent to the API server to enforce custom defaults. After all object modifications are complete, and after the incoming object is validated by the API server, validating admission webhooks are invoked and can reject requests to enforce custom policies.
+
+
+23) CustomResourceDefinition:
+
+
+The CustomResourceDefinition API resource allows you to define custom resources. Defining a CRD object creates a new custom resource with a name and schema that you specify. The Kubernetes API serves and handles the storage of your custom resource. The name of a CRD object must be a valid DNS subdomain name.
+
+
+24) APIserver:
+The aggregation layer allows Kubernetes to be extended with additional APIs, beyond what is offered by the core Kubernetes APIs. The additional APIs can either be ready-made solutions such as a metrics server, or APIs that you develop yourself.
+The aggregation layer is different from Custom Resources, which are a way to make the kube-apiserver recognise new kinds of object.
+Aggregation layer 
+The aggregation layer runs in-process with the kube-apiserver. Until an extension resource is registered, the aggregation layer will do nothing. To register an API, you add an APIService object, which "claims" the URL path in the Kubernetes API. At that point, the aggregation layer will proxy anything sent to that API path (e.g. /apis/myextension.mycompany.io/v1/…) to the registered APIService.
+The most common way to implement the APIService is to run an extension API server in Pod(s) that run in your cluster. If you're using the extension API server to manage resources in your cluster, the extension API server (also written as "extension-apiserver") is typically paired with one or more controllers. The apiserver-builder library provides a skeleton for both extension API servers and the associated controller(s).
+
+25) Controller Revision:
+ControllerRevision is an immutable snapshot of state. It's primarily intended for internal use by controllers. For example, it's used by the DaemonSet and StatefulSet controllers for update and rollback.
+Here's an example Kubernetes ControllerRevision:
+apiVersion: apps/v1
+kind: ControllerRevision
+metadata:
+  name: example
+data:
+  key: value
+revision: 1
+26) Deamonset:
+A DaemonSet ensures that all (or some) Nodes run a copy of a Pod. As nodes are added to the cluster, Pods are added to them. As nodes are removed from the cluster, those Pods are garbage collected. Deleting a DaemonSet will clean up the Pods it created.
+Some typical uses of a DaemonSet are:
+running a cluster storage daemon on every node
+running a logs collection daemon on every node
+running a node monitoring daemon on every node
+In a simple case, one DaemonSet, covering all nodes, would be used for each type of daemon. A more complex setup might use multiple DaemonSets for a single type of daemon, but with different flags and/or different memory and cpu requests for different hardware types.
+
+27) Deployments:
+A Deployment provides declarative updates for Pods and ReplicaSets.
+You describe a desired state in a Deployment, and the Deployment Controller changes the actual state to the desired state at a controlled rate. You can define Deployments to create new ReplicaSets, or to remove existing Deployments and adopt all their resources with new Deployments.
+
+28) Replicas:
+A ReplicaSet's purpose is to maintain a stable set of replica Pods running at any given time. As such, it is often used to guarantee the availability of a specified number of identical Pods.
+
+How a ReplicaSet works
+A ReplicaSet is defined with fields, including a selector that specifies how to identify Pods it can acquire, a number of replicas indicating how many Pods it should be maintaining, and a pod template specifying the data of new Pods it should create to meet the number of replicas criteria. A ReplicaSet then fulfills its purpose by creating and deleting Pods as needed to reach the desired number. When a ReplicaSet needs to create new Pods, it uses its Pod template.
+A ReplicaSet is linked to its Pods via the Pods' metadata.ownerReferences field, which specifies what resource the current object is owned by. All Pods acquired by a ReplicaSet have their owning ReplicaSet's identifying information within their ownerReferences field. It's through this link that the ReplicaSet knows of the state of the Pods it is maintaining and plans accordingly.
+A ReplicaSet identifies new Pods to acquire by using its selector. If there is a Pod that has no OwnerReference or the OwnerReference is not a Controller and it matches a ReplicaSet's selector, it will be immediately acquired by said ReplicaSet.
+
+
+
+
+
+29) StatefulSets:
+StatefulSet is the workload API object used to manage stateful applications.
+Manages the deployment and scaling of a set of Pods, and provides guarantees about the ordering and uniqueness of these Pods.
+Like a Deployment, a StatefulSet manages Pods that are based on an identical container spec. Unlike a Deployment, a StatefulSet maintains a sticky identity for each of their Pods. These pods are created from the same spec, but are not interchangeable: each has a persistent identifier that it maintains across any rescheduling.
+If you want to use storage volumes to provide persistence for your workload, you can use a StatefulSet as part of the solution. Although individual Pods in a StatefulSet are susceptible to failure, the persistent Pod identifiers make it easier to match existing volumes to the new Pods that replace any that have failed.
+Using StatefulSets
+StatefulSets are valuable for applications that require one or more of the following.
+Stable, unique network identifiers.
+Stable, persistent storage.
+Ordered, graceful deployment and scaling.
+Ordered, automated rolling updates.
+In the above, stable is synonymous with persistence across Pod (re)scheduling. If an application doesn't require any stable identifiers or ordered deployment, deletion, or scaling, you should deploy your application using a workload object that provides a set of stateless replicas. Deployment or ReplicaSet may be better suited to your stateless needs.
+Limitations
+The storage for a given Pod must either be provisioned by a PersistentVolume Provisioner based on the requested storage class, or pre-provisioned by an admin.
+Deleting and/or scaling a StatefulSet down will not delete the volumes associated with the StatefulSet. This is done to ensure data safety, which is generally more valuable than an automatic purge of all related StatefulSet resources.
+StatefulSets currently require a Headless Service to be responsible for the network identity of the Pods. You are responsible for creating this Service.
+StatefulSets do not provide any guarantees on the termination of pods when a StatefulSet is deleted. To achieve ordered and graceful termination of the pods in the StatefulSet, it is possible to scale the StatefulSet down to 0 prior to deletion.
+When using Rolling Updates with the default Pod Management Policy (OrderedReady), it's possible to get into a broken state that requires manual intervention to repair.
+
+
+37) Horizontal Pod Autoscaling:
+In Kubernetes, a HorizontalPodAutoscaler automatically updates a workload resource (such as a Deployment or StatefulSet), with the aim of automatically scaling the workload to match demand.
+Horizontal scaling means that the response to increased load is to deploy more Pods. This is different from vertical scaling, which for Kubernetes would mean assigning more resources (for example: memory or CPU) to the Pods that are already running for the workload.
+If the load decreases, and the number of Pods is above the configured minimum, the HorizontalPodAutoscaler instructs the workload resource (the Deployment, StatefulSet, or other similar resource) to scale back down.
+Horizontal pod autoscaling does not apply to objects that can't be scaled (for example: a DaemonSet.)
+The HorizontalPodAutoscaler is implemented as a Kubernetes API resource and a controller. The resource determines the behavior of the controller. The horizontal pod autoscaling controller, running within the Kubernetes control plane, periodically adjusts the desired scale of its target (for example, a Deployment) to match observe
+
+
+38) CronJob:
+FEATURE STATE: Kubernetes v1.21 [stable]
+A CronJob creates Jobs on a repeating schedule.
+One CronJob object is like one line of a crontab (cron table) file. It runs a job periodically on a given schedule, written in Cron format.
+CronJobs are meant for performing regular scheduled actions such as backups, report generation, and so on. Each of those tasks should be configured to recur indefinitely (for example: once a day / week / month); you can define the point in time within that interval when the job should start.
+
+Example:
+apiVersion: batch/v1
+
+kind: CronJob
+
+metadata:
+
+ name: hello
+
+spec:
+
+ schedule: "* * * * *"
+
+ jobTemplate:
+
+   spec:
+
+     template:
+
+       spec:
+
+         containers:
+
+         - name: hello
+
+           image: busybox:1.28
+
+           imagePullPolicy: IfNotPresent
+
+           command:
+
+           - /bin/sh
+
+           - -c
+
+           - date; echo Hello from the Kubernetes cluster
+
+         restartPolicy: OnFailure
+
+
+l39) Jobs:
+A Job creates one or more Pods and will continue to retry execution of the Pods until a specified number of them successfully terminate. As pods successfully complete, the Job tracks the successful completions. When a specified number of successful completions is reached, the task (ie, Job) is complete. Deleting a Job will clean up the Pods it created. Suspending a Job will delete its active Pods until the Job is resumed again.
+A simple case is to create one Job object in order to reliably run one Pod to completion. The Job object will start a new Pod if the first Pod fails or is deleted (for example due to a node hardware failure or a node reboot).
+You can also use a Job to run multiple Pods in parallel.
+Example: 
+Here is an example Job config. It computes π to 2000 places and prints it out. It takes around 10s to complete.
+
+apiVersion: batch/v1
+
+kind: Job
+
+metadata:
+
+ name: pi
+
+spec:
+
+ template:
+
+   spec:
+
+     containers:
+
+     - name: pi
+
+       image: perl:5.34
+
+       command: ["perl",  "-Mbignum=bpi", "-wle", "print bpi(2000)"]
+
+     restartPolicy: Never
+
+ backoffLimit: 4
+
+
+
+40) CertificateRequests:
+The CertificateRequest is a namespaced resource in cert-manager that is used to request X.509 certificates from an Issuer. The resource contains a base64 encoded string of a PEM encoded certificate request which is sent to the referenced issuer. A successful issuance will return a signed certificate, based on the certificate signing request. CertificateRequests are typically consumed and managed by controllers or other systems and should not be used by humans - unless specifically needed.
+
+41) Certificate:
+https://kubernetes.io/docs/tasks/administer-cluster/certificates/
+https://cert-manager.io/v0.12-docs/installation/kubernetes/
+
+
+42) Clusterissuers:
+https://cert-manager.io/v0.12-docs/installation/kubernetes/
+
+43) Issuers:
+https://cert-manager.io/v0.12-docs/installation/kubernetes/
+
+44) Certificate Signing Request:
+A Certificate Signing Request (CSR) is a block of encoded texts forwarded to a Certificate Authority (CA) when users apply for a certificate, such as an SSL/TLS certificate. CSR is created on the server where the certificate will be installed.CSR includes information such as domain name, organization name, locality, and country. The request also contains the public key, which will be associated with the certificate generated, and the same server also generates the private key. When developing the certificate, CA would only use the public key, and the private key should be saved and kept secret, as the private key is the key pair of the public key, and the certificate would not work if we lose the private key.
+
+45) BackendConfigs:
+A BackendConfig is custom resource definitions (CRDs) that allow you to further customize the load balancer.
+Link: https://kubes.guru/docs/dsl/resources/backend_config/
+
+
+	46) Adapters:
+
+
+Kubernetes Adapter Pattern allows us to run a sidecar container along with main application container to convert the API as the client expects without any application code change!
+https://www.vinsguru.com/kubernetes-adapter-pattern-implementation/
+
+
+	47)Attribute Manifests:
+The Kubernetes manifest is a JSON configuration file that describes the list of Kubernetes versions supported by HPE Ezmeral Runtime Enterprise, Kubernetes add-on versions, and specific container image version dependencies that are relevant during the installation of a Kubernetes cluster.
+
+
+	48) Handlers:
+https://kubernetes.io/docs/concepts/containers/container-lifecycle-hooks/
+
+
+kubectl describe pod lifecycle-demo
+
+	57) Endpointslices:
+https://kubernetes.io/docs/concepts/services-networking/endpoint-slices/
+
+	58) Ingress:
+The Ingress concept lets you map traffic to different backends based on rules you define via the Kubernetes API. An API object that manages external access to the services in a cluster, typically HTTP. Ingress may provide load balancing, SSL termination and name-based virtual hosting.
+https://kubernetes.io/docs/concepts/services-networking/ingress/#:~:text=The%20Ingress%20concept%20lets%20you,define%20via%20the%20Kubernetes%20API.&text=An%20API%20object%20that%20manages,and%20name%2Dbased%20virtual%20hosting.
+	59) Capacity request:
+https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+
+https://mkdev.me/posts/kubernetes-capacity-and-resource-management-it-s-not-what-you-think-it-is#:~:text=Kubernetes%20Resource%20Quotas%20allow%20to,and%2060%20Gb%20of%20RAM%E2%80%9D.
+
+	60-61) Nodes and Pods:
+A Node is a worker machine in Kubernetes and may be either a virtual or a physical machine, depending on the cluster. Each Node is managed by the control plane. A Node can have multiple pods, and the Kubernetes control plane automatically handles scheduling the pods across the Nodes in the cluster.
+
+Pods are the smallest deployable units of computing that you can create and manage in Kubernetes.
+
+https://kubernetes.io/docs/concepts/workloads/pods/
+
+https://kubernetes.io/docs/tutorials/kubernetes-basics/explore/explore-intro/#:~:text=A%20Node%20is%20a%20worker,the%20Nodes%20in%20the%20cluster.
+
+	67) Destination Rules:
+DestinationRule defines policies that apply to traffic intended for a service after routing has occurred. These rules specify configuration for load balancing, connection pool size from the sidecar, and outlier detection settings to detect and evict unhealthy hosts from the load balancing pool.
+https://istio.io/latest/docs/reference/config/networking/destination-rule/
+
+	68) Envoy FIlters:
+EnvoyFilter provides a mechanism to customize the Envoy configuration generated by Istio Pilot. Use EnvoyFilter to modify values for certain fields, add specific filters, or even add entirely new listeners, clusters, etc. 
+https://istio.io/latest/docs/reference/config/networking/envoy-filter/
+
