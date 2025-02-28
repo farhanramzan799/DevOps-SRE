@@ -1,0 +1,102 @@
+1. Connect to the Server:
+ssh root@server_ip
+
+2. install required packages:
+apt update && apt upgrade -y
+apt install wget curl git nginx -y
+
+3. Download and install conda:
+cd /opt
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
+
+4. Follow the installation steps, then activate Conda:
+source ~/.bashrc
+
+5. Clone Your Django App:
+cd /var/www
+git clone https://github.com/yourusername/your-django-repo.git myapp
+cd myapp
+
+6. Create a Conda Environment & Install Dependencies:
+conda create --name myenv python=3.9 -y
+conda activate myenv
+pip install -r requirements.txt
+
+7. Configure Gunicorn:
+pip install gunicorn
+Test running Gunicorn:
+gunicorn --bind 0.0.0.0:8000 myproject.wsgi
+If the app runs successfully, stop it (Ctrl+C) and set up a Gunicorn systemd service.
+
+8. Create a Gunicorn Systemd Service:
+Create the service file:
+nano /etc/systemd/system/gunicorn.service
+
+paste:
+[Unit]
+Description=Gunicorn Daemon for Django App
+After=network.target
+
+[Service]
+User=root
+Group=root
+WorkingDirectory=/var/www/myapp
+ExecStart=/var/www/miniconda3/envs/myenv/bin/gunicorn --workers 3 --bind unix:/var/www/myapp/myapp.sock myproject.wsgi:application
+Environment="PATH=/var/www/miniconda3/envs/myenv/bin"
+
+Save & exit
+
+Enable and start Gunicorn:
+systemctl daemon-reload
+systemctl start gunicorn
+systemctl enable gunicorn
+
+9. Configure Nginx
+Create an Nginx config file:
+nano /etc/nginx/sites-available/myapp
+and paste
+server {
+    listen 80;
+    server_name yourdomain.com;
+
+    location /static/ {
+        root /var/www/myapp;
+    }
+
+    location / {
+        proxy_pass http://unix:/var/www/myapp/gunicorn.sock;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    }
+}
+
+
+Enable Nginx config:
+ln -s /etc/nginx/sites-available/myapp /etc/nginx/sites-enabled/
+nginx -t
+systemctl restart nginx
+
+
+10. Configure Firewall:
+ufw allow OpenSSH
+ufw allow 'Nginx Full'
+ufw enable
+
+11. Set Up SSL:
+For a free SSL certificate using Let’s Encrypt:
+apt install certbot python3-certbot-nginx -y
+certbot --nginx -d your_domain
+
+Auto-renew:
+certbot renew --dry-run
+
+12. now access the application on url or server ip.
+If you make any changes donot forget to restart:
+systemctl restart nginx
+
+13. for logs:
+journalctl -u gunicorn --no-pager --lines=50
+tail -f /var/log/nginx/error.log
+

@@ -1,0 +1,46 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: sql-backup-script
+data:
+  backup.sql: |
+    USE DATABASE_NAME
+    GO
+
+    DECLARE @BackupFileName nvarchar(255)
+    DECLARE @BackupURL nvarchar(max)
+    DECLARE @BackupOptions nvarchar(max)
+    DECLARE @BackupDateTime nvarchar(50)
+
+    -- Generate a datetime string without illegal characters.
+    -- This converts GETDATE() to 'YYYY-MM-DD HH:MM:SS', then removes colons and replaces space with an underscore.
+    IF '$(BACKUP_TYPE)' = 'fourhourly'
+    BEGIN
+        -- Use just the date for 'fourhourly' backups to allow overwriting.
+        SET @BackupDateTime = CONVERT(varchar(10), GETDATE(), 120) -- 'YYYY-MM-DD'
+    END
+    ELSE
+    BEGIN
+        -- Full datetime string for other backup types.
+        SET @BackupDateTime = REPLACE(REPLACE(CONVERT(varchar(19), GETDATE(), 120), ':', ''), ' ', '_')
+    END
+
+    -- Build the backup file name dynamically.
+    SET @BackupFileName = 'FILENAME_' + '$(ENVIRONMENT_NAME)' + '_' + '$(BACKUP_TYPE)' + '_' + @BackupDateTime + '.bak'
+
+    -- Construct the full Azure Blob Storage backup URL.
+    SET @BackupURL = 'https://sotrage-account-url/' + @BackupFileName
+
+    -- Set backup options based on backup type.
+    IF '$(BACKUP_TYPE)' = 'fourhourly'
+        SET @BackupOptions = 'FORMAT, INIT, STATS = 10'
+    ELSE
+        SET @BackupOptions = 'FORMAT, STATS = 10'
+
+    PRINT 'Starting backup to ' + @BackupURL
+
+    -- Construct and execute the backup command.
+    DECLARE @SQL nvarchar(max)
+    SET @SQL = 'BACKUP DATABASE DATABASE_NAME TO URL = ''' + @BackupURL + ''' WITH ' + @BackupOptions
+    EXEC sp_executesql @SQL
+    GO
