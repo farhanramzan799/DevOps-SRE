@@ -1,0 +1,176 @@
+{{- if .Values.sloth.enabled }}
+{{ $namespace := .Values.namespace }}
+{{- $sloname := include "api-slo.name" . -}}
+{{- $servicename := include "service.name" . -}}
+{{- $apiname := include "api.name" . -}}
+{{- $apifullname := include "api.fullname" . -}}
+
+apiVersion: sloth.slok.dev/v1
+kind: PrometheusServiceLevel
+metadata:
+  name: {{ $sloname }}
+  namespace: {{ $namespace }}
+  labels:
+    prometheus: {{ .Values.sloth.prometheusAurora }}
+    role: {{ .Values.sloth.role }}
+    chart: {{ template "test.chart" . }}
+    version: {{ .Chart.AppVersion }}
+    heritage: {{ .Release.Service }}
+spec:
+  service: {{ $apifullname }}
+  labels:
+    namespace: {{ $namespace }}
+    owner: {{ .Values.sloth.owner }}
+    repo: {{ .Values.sloth.repo }}
+    tier: {{ .Values.sloth.tier | quote }}
+  slos:
+    ## availability category SLO's
+    - name: "availability-up"
+      objective: 99.99
+      description: "SLO based on service prometheus up metric"
+      sli:
+        plugin:
+          id: "sloth-common/prometheus/targets/availability"
+          options:
+            filter: job=~"{{$apiname}}",namespace=~"{{$namespace}}"
+      alerting:
+        name: "{{$apiname}}-availability-up"
+        labels:
+          category: "availability"
+        annotations:
+          summary: "{{ $apiname }} availability up"
+        pageAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+            routing_key: {{ .Values.sloth.routing_key}}
+        ticketAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+
+    - name: "availability-health"
+      objective: 99
+      description: "SLO based on service health metric."
+      sli:
+        events:
+          errorQuery: count_over_time((healthcheck{job="{{$apiname}}", container="{{$apiname}}",namespace="{{$namespace}}"} < 2) [{{ "{{" }}.window{{ "}}" }}:])
+          totalQuery: count_over_time((healthcheck{job="{{$apiname}}", container="{{$apiname}}",namespace="{{$namespace}}"}) [{{ "{{" }}.window{{ "}}" }}:])
+      alerting:
+        name: "{{$apiname}}-availability-health"
+        labels:
+          category: "availability"
+        annotations:
+          summary: "{{ $apiname }} availability health"
+        pageAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+            routing_key: {{ .Values.sloth.routing_key}}
+        ticketAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }} 
+    
+    - name: "performance-p99"
+      objective: 99
+      description: "SLO based on p-99 http request duration."
+      sli:
+        events:
+          errorQuery: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{$apiname}}",container="{{$apiname}}", namespace="{{$namespace}}",code!~"(4..|5..)"}[{{ "{{" }}.window{{ "}}" }}]))by (le, controller)) > 30
+          totalQuery: histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{job="{{$apiname}}",container="{{$apiname}}", namespace="{{$namespace}}"}[{{ "{{" }}.window{{ "}}" }}]))by (le, controller))
+      alerting:
+        name: "{{$apiname}}-performance-p99"
+        labels:
+          category: "performance"
+        annotations:
+          summary: "{{$apiname}} high response time-p99"
+        pageAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+            routing_key: {{ .Values.sloth.routing_key}}
+        ticketAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+        
+    - name: "performance-p90"
+      objective: 99
+      description: "SLO based on p-90 http request duration."
+      sli:
+        events:
+          errorQuery: histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket{job="{{$apiname}}",container="{{$apiname}}", namespace="{{$namespace}}",code!~"(4..|5..)"}[{{ "{{" }}.window{{ "}}" }}]))by (le, controller)) > 20
+          totalQuery: histogram_quantile(0.90, sum(rate(http_request_duration_seconds_bucket{job="{{$apiname}}",container="{{$apiname}}", namespace="{{$namespace}}"}[{{ "{{" }}.window{{ "}}" }}]))by (le, controller))
+      alerting:
+        name: "{{$apiname}}-performance-p90"
+        labels:
+          category: "performance"
+        annotations:
+          summary: "{{$apiname}} high response time-p90"
+        pageAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+            routing_key: {{ .Values.sloth.routing_key}}
+        ticketAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+  
+    - name: "performance-p50"
+      objective: 99
+      description: "SLO based on p50 http request duration."
+      sli:
+        events:
+          errorQuery: histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job="{{$apiname}}",container="{{$apiname}}", namespace="{{$namespace}}",code!~"(4..|5..)"}[{{ "{{" }}.window{{ "}}" }}]))by (le, controller)) > 10
+          totalQuery: histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{job="{{$apiname}}",container="{{$apiname}}", namespace="{{$namespace}}"}[{{ "{{" }}.window{{ "}}" }}]))by (le, controller))
+      alerting:
+        name: "{{$apiname}}-performance-p50"
+        labels:
+          category: "performance"
+        annotations:
+          summary: "{{$apiname}} high response time-p50"
+        pageAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+            routing_key: {{ .Values.sloth.routing_key}}
+        ticketAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+
+    ## failures category SLO's
+    - name: "failures-5x"
+      objective: 99
+      description: "SLO based on http 5x failures."
+      sli:
+        events:
+          errorQuery: sum(rate(http_request_duration_seconds_count{job="{{$apiname}}",container="{{$apiname}}",namespace="{{$namespace}}",code=~"(5..)"}[{{ "{{" }}.window{{ "}}" }}]))
+          totalQuery: sum(rate(http_request_duration_seconds_count{job="{{$apiname}}",container="{{$apiname}}",namespace="{{$namespace}}"}[{{ "{{" }}.window{{ "}}" }}]))
+      alerting:
+        name: "{{$apiname}}-failures-5x"
+        labels:
+          category: "failures"
+        annotations:
+          summary: "{{$apiname}} high failures 5x"
+        pageAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+            routing_key: {{ .Values.sloth.routing_key}}
+        ticketAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+
+    - name: "failures-4x"
+      objective: 99
+      description: "SLO based on http 4x failures."
+      sli:
+        events:
+          errorQuery: sum(rate(http_request_duration_seconds_count{job="{{$apiname}}",container="{{$apiname}}",namespace="{{$namespace}}",code=~"(4..)"}[{{ "{{" }}.window{{ "}}" }}]))
+          totalQuery: sum(rate(http_request_duration_seconds_count{job="{{$apiname}}",container="{{$apiname}}",namespace="{{$namespace}}"}[{{ "{{" }}.window{{ "}}" }}]))
+      alerting:
+        name: "{{$apiname}}-failures-4x"
+        labels:
+          category: "failures"
+        annotations:
+          summary: "{{$apiname}} high failures 4x"
+        pageAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}
+            routing_key: {{ .Values.sloth.routing_key}}
+        ticketAlert:
+          labels:
+            severity: {{ .Values.sloth.severity }}     
+{{- end -}}

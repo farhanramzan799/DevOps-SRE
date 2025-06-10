@@ -1,0 +1,16 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "test-api.fullname" . }}-pdb
+  labels:
+    app: {{ template "test-api.name" . }}
+    chart: {{ template "test.chart" . }}
+    release: {{ .Release.Name }}
+    version: {{ .Chart.AppVersion }}
+    heritage: {{ .Release.Service }}
+spec:
+  maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: {{ template "test-api.name" . }}
+      release: {{ .Release.Name }}

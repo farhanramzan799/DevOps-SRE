@@ -1,0 +1,34 @@
+{{- if .Values.hpa.enable -}}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "test-api.fullname" . }}-hpa
+  labels:
+    app: {{ template "test-api.name" . }}
+    chart: {{ template "test.chart" . }}
+    release: {{ .Release.Name }}
+    version: {{ .Chart.AppVersion }}
+    heritage: {{ .Release.Service }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "test-api.fullname" . }}
+  minReplicas: {{ .Values.hpa.min_replicas }}
+  maxReplicas: {{ .Values.hpa.max_replicas }}
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: {{ .Values.hpa.average_cpu_percent }}
+  {{- if .Values.hpa.average_memory_value -}}
+  {{- index "- type: Resource" | nindent 2 }}
+    resource:
+      name: memory
+      target:
+        type: AverageValue
+        averageValue: {{ .Values.hpa.average_memory_value }}
+  {{- end -}}
+{{- end -}}

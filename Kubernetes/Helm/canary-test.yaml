@@ -1,0 +1,87 @@
+{{- if and (.Values.canary.enabled) (eq .Values.canary.mode "flagger") }}
+{{- $fullName := include "test-api.fullname" . -}}
+{{- $namespace := .Values.namespace -}}
+{{- end -}}
+apiVersion: flagger.app/v1beta1
+kind: Canary
+metadata:
+  name: {{ include "test-api.fullname" . }}
+  namespace: {{ $namespace }}
+  labels:
+    app: {{ template "test-api.name" . }}
+    chart: {{ template "test.chart" . }}
+    release: {{ .Release.Name }}
+    version: {{ .Chart.AppVersion }}
+    heritage: {{ .Release.Service }}
+  annotations:
+    buildId: {{ .Values.buildId | default "" | quote }}
+    version: {{ .Chart.AppVersion | default "" | quote }}
+spec:
+  provider: linkerd
+  targetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "test-api.fullname" . }}
+  progressDeadlineSeconds: {{ .Values.canary.progress_min_deadlimit }}
+  autoscalerRef:
+    apiVersion: autoscaling/v2
+    kind: HorizontalPodAutoscaler
+    name: {{ include "test-api.fullname" . }}-hpa
+  service:
+    name: {{ .Values.app.svc.test }}
+    port: {{ .Values.service.ports.http }}
+    targetPort: {{ .Values.service.ports.http }}
+    portName: http
+    portDiscovery: true
+    match:
+      - uri:
+          prefix: /
+    rewrite:
+      uri: /
+    timeout: 5s
+  skipAnalysis: false
+  analysis:
+    interval: {{ .Values.canary.analysis.interval }}
+    threshold: {{ .Values.canary.analysis.threshold }}
+    maxWeight: {{ .Values.canary.analysis.maxweight }}
+    stepWeight: {{ .Values.canary.analysis.stepweight }}
+    metrics:
+      - name: request-success-rate
+        thresholdRange:
+          min: 99
+        interval: 1m
+      - name: request-duration
+        thresholdRange:
+          max: 500
+        interval: 30s
+    webhooks:
+      {{- if and .Values.canary.urls.azure .Values.canary.pull_request_id }}
+      - name: "send to azure"
+        type: event
+        url: {{ .Values.canary.urls.azure }}
+        metadata:
+          pullRequestId: {{ .Values.canary.pull_request_id }}
+      {{- end }}
+      {{- if .Values.canary.urls.helmtest }}
+      - name: "conformance test"
+        type: pre-rollout
+        url: {{ .Values.canary.urls.helmtest }}
+        timeout: 5m
+        metadata:
+          type: "helmv3"
+          cmd: "test {{ .Release.Name }} -n {{ $namespace }}"
+      {{- end }}
+      {{- if .Values.canary.urls.loadtest }}
+      - name: "load test"
+        type: rollout
+        url: {{ .Values.canary.urls.loadtest }}
+        timeout: 5s
+        metadata:
+          cmd: "hey -z 1m -q 10 -c 2 http://{{ .Values.app.svc.test }}-canary.{{ $namespace }}:{{ .Values.service.ports.http }}/api/docs/swagger"
+      {{- end }}
+    alerts:
+      - name: "msteams-alerts"
+        severity: info
+        providerRef:
+          name: msteams-alertprovider
+{{- end -}}

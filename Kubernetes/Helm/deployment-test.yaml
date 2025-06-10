@@ -1,0 +1,157 @@
+{{ $name := include "test-api.fullname" . }}
+{{ $testname := include "test.fullname" . }}
+{{ $cfgname := printf "%s-%s" $testname "cfg" }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "test-api.fullname" . }}
+  labels:
+    app: {{ template "test-api.name" . }}
+    chart: {{ template "test.chart" . }}
+    release: {{ .Release.Name }}
+    version: {{ .Chart.AppVersion }}
+    heritage: {{ .Release.Service }}
+    {{ if .Values.ingress.enabled }}
+    {{ $host := .Values.urls.testapi }}
+    endpoint: {{ $host }}
+    {{ end }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ include "test-api.name" . }}
+      release: {{ .Release.Name }}
+  {{ if not .Values.hpa.enable }}
+  replicas: {{ .Values.replicaCount }}
+  {{ end }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: {{ template "test-api.name" . }}
+        release: {{ .Release.Name }}
+        version: {{ .Chart.AppVersion }}
+      annotations:
+        buildId: {{ .Values.buildId | default "" | quote }}
+        version: {{ .Chart.AppVersion | default "" | quote }}
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+        checksum/config: {{ include (print $.Template.BasePath "/config/configmap.yaml") . | sha256sum }}
+    spec:
+      {{ if .Values.image.pullSecret }}
+      imagePullSecrets:
+        - name: {{ .Values.image.pullSecret }} 
+      {{ end }}
+      volumes:
+        - name: podinfo
+          downwardAPI:
+            items:
+              - path: "labels"
+                fieldRef:
+                  fieldPath: metadata.labels
+              - path: "annotations"
+                fieldRef:
+                  fieldPath: metadata.annotations
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            {{ if $.Values.env.secrets }}
+            {{ range $key, $value := $.Values.env.secrets }}
+            - name: {{ $key }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ $.Values.inf.a_secrets }}
+                  key: {{ $value }}
+            {{ end }}
+            {{ end }}
+            {{ if and .Values.env.configmap $.Values.env.secrets }}
+            {{ range $key, $value := .Values.env.configmap }}
+            {{ $skip := false }}
+            {{ range $secretKey, $secretValue := $.Values.env.secrets }}
+            {{ if eq $value $secretValue }}
+            {{ $skip = true }}
+            {{ end }}
+            {{ end }}
+            {{ if not $skip }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ $cfgname }}
+                  key: {{ $value }}
+            {{ end }}
+            {{ end }}
+            {{ else if .Values.env.configmap }}
+            {{ range $key, $value := .Values.env.configmap }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ $cfgname }}
+                  key: {{ $value }}
+            {{ end }}
+            {{ end }}
+            {{ else }}
+            {{ if .Values.env.configmap }}
+            {{ range $key, $value := .Values.env.configmap }}
+            - name: {{ $key }}
+              valueFrom:
+                configMapKeyRef:
+                  name: {{ $cfgname }}
+                  key: {{ $value }}
+            {{ end }}
+            {{ end }}
+            {{ end }}
+          {{ if .Values.probes.startup.enabled }}
+          startupProbe:
+            httpGet:
+              path: {{ .Values.probes.startup.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.startup.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.startup.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.startup.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.startup.failureThreshold }}
+          {{ end }}
+          {{ if .Values.probes.liveness.enabled }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probes.liveness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.liveness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.liveness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.liveness.timeoutSeconds }}
+            failureThreshold: {{ .Values.probes.liveness.failureThreshold }}
+          {{ end }}
+          {{ if .Values.probes.readiness.enabled }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probes.readiness.path }}
+              port: http
+            initialDelaySeconds: {{ .Values.probes.readiness.initialDelaySeconds }}
+            periodSeconds: {{ .Values.probes.readiness.periodSeconds }}
+            timeoutSeconds: {{ .Values.probes.readiness.timeoutSeconds }}
+            successThreshold: {{ .Values.probes.readiness.successThreshold }}
+            failureThreshold: {{ .Values.probes.readiness.failureThreshold }}
+          {{ end }}
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}
