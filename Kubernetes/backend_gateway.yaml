@@ -1,0 +1,57 @@
+apiVersion: networking.istio.io/v1beta1
+kind: Gateway
+metadata:
+  name: backend-gateway-xstak
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - api.example.com
+    port:
+      name: http-kiali
+      number: 15029
+      protocol: HTTP
+  - hosts:
+    - api.example.com
+    port:
+      name: http-tracing
+      number: 15032
+      protocol: HTTP
+  - hosts:
+    - api.example.com
+    port:
+      name: http-igniteconsole
+      number: 81
+      protocol: HTTP
+  - hosts:
+    - api.example.com
+    port:
+      name: http-grafana
+      number: 15031
+      protocol: HTTP
+  - hosts:
+    - api.example.com
+    port:
+      name: http-prometheus
+      number: 15030
+      protocol: HTTP
+  - hosts:
+    - api.example.com
+    port:
+      name: http-activemq
+      number: 8161
+      protocol: HTTP
+  - hosts:
+    - api.example.com
+    port:
+      name: tcp-activemq
+      number: 61613
+      protocol: TCP
+  - hosts:
+    - api.example.com
+    port:
+      name: tcp-activemq-openwire
+      number: 61616
+      protocol: TCP

@@ -1,0 +1,11 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualService
+metadata:
+  name: oe-searchorder-service
+  namespace: oe-stage
+spec:
+  awsName: oe-searchorder-service.my-apps.svc.cluster.local
+  provider:
+    virtualRouter:
+      virtualRouterRef:
+        name: oe-searchorder-service-virtual-router

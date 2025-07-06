@@ -1,0 +1,518 @@
+apiVersion: networking.istio.io/v1beta1
+kind: VirtualService
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"networking.istio.io/v1beta1","kind":"VirtualService","metadata":{"annotations":{},"creationTimestamp":"2020-01-08T13:40:49Z","generation":408,"name":"backend-virtualservice","namespace":"istio-system","resourceVersion":"335884309","selfLink":"/apis/networking.istio.io/v1beta1/namespaces/istio-system/virtualservices/backend-virtualservice","uid":"9c479b6c-110e-43f7-b13d-e180d11a55cc"},"spec":{"gateways":["backend-gateway"],"hosts":["oeprocessingstage.example.pk"],"http":[{"match":[{"uri":{"prefix":"/kiali/"}}],"route":[{"destination":{"host":"kiali.istio-system.svc.cluster.local","port":{"number":20001}}}]},{"match":[{"uri":{"prefix":"/jaeger/"}}],"route":[{"destination":{"host":"jaeger-query.istio-system.svc.cluster.local","port":{"number":16686}}}]},{"match":[{"uri":{"prefix":"/oauth"}}],"route":[{"destination":{"host":"oauth.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/ignite"}}],"route":[{"destination":{"host":"ignite-cluster.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/replenishment"}}],"route":[{"destination":{"host":"replenishment.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/cubejs/"}}],"route":[{"destination":{"host":"bi-engine.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/dashboard"}}],"route":[{"destination":{"host":"dashboard-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/datadump/"}}],"route":[{"destination":{"host":"orderdump-new.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/inventory/updateQuantityAPI"}},{"uri":{"prefix":"/inventory/updatePriceAPI"}},{"uri":{"prefix":"/inventory/sync_webstore"}},{"uri":{"prefix":"/inventory/"}},{"uri":{"prefix":"/inventory/create_outfinal"}},{"uri":{"prefix":"/inventory/getMasterAndStroreInvDataOnSkuLevel"}},{"uri":{"regex":"/inventory/brand_queue\\/[^\\/]+"}}],"route":[{"destination":{"host":"inventory-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/reconcile/"}}],"route":[{"destination":{"host":"reconciliation-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/scheduler/get_all\\/[^\\/]+"}},{"uri":{"regex":"/scheduler\\/[^\\/]+\\/update_job"}},{"uri":{"regex":"/scheduler\\/[^\\/]+\\/update_job_status"}},{"uri":{"regex":"/scheduler\\/[^\\/]+\\/create_markinvzero_job\\/[^\\/]+"}}],"route":[{"destination":{"host":"oe-scheduler-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/scheduler/"}}],"route":[{"destination":{"host":"scheduler-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/tracking/courierScheduler"}}],"route":[{"destination":{"host":"courier-tracking-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/marketing"}}],"route":[{"destination":{"host":"rfm-marketing-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/shopify-shipping-rates"}}],"route":[{"destination":{"host":"shopify-shipping-rates-service.oe-stage.svc.cluster.local","port":{"number":3000}}}]},{"match":[{"uri":{"prefix":"/shopify"}}],"route":[{"destination":{"host":"shopify-service.oe-stage.svc.cluster.local","port":{"number":3000}}}]},{"match":[{"uri":{"prefix":"/analytics"}}],"route":[{"destination":{"host":"analytics-dashboard.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/slotting"}}],"route":[{"destination":{"host":"oe-slotting-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/fbr/sync-order"}}],"route":[{"destination":{"host":"fbr-integration-service.oe-stage.svc.cluster.local","port":{"number":8000}}}]},{"match":[{"uri":{"prefix":"/exampleoeadmin"}}],"route":[{"destination":{"host":"bootadmin.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/users/"}},{"uri":{"prefix":"/monitoring/"}},{"uri":{"prefix":"/backup/loadBrand"}},{"uri":{"prefix":"/backup/loadBrandChannel"}},{"uri":{"prefix":"/backup/loadLocation"}},{"uri":{"prefix":"/backup/cancellationReason"}},{"uri":{"prefix":"/backup/"}},{"uri":{"prefix":"/orders/getSkuOrderLevelDetail"}},{"uri":{"prefix":"/orders/generateReplenishmentReport"}},{"uri":{"prefix":"/backup/addComment"}},{"uri":{"prefix":"/searchOrdersBySku"}},{"uri":{"prefix":"/backup/addOrderBrandDetails"}}],"route":[{"destination":{"host":"order-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/orders\\/[^\\/]+\\/item\\/[^\\/]+"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/(editbyebm|editbysm)"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/(updateordersm|updateorderebm)"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/split"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/(manualSplit|getManualSplitLocations)"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/addComment"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/updateTag"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/getSkuAvailability\\/[^\\/]+"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/checkStoreQuantity"}},{"uri":{"prefix":"/orders/shopify/createEditedOrder"}}],"route":[{"destination":{"host":"oe-editordertransition-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/orders/crm_searchorders"}},{"uri":{"regex":"/orders/searchOrders"}},{"uri":{"regex":"/orders/orderCount"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/detail"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/crm_detail"}},{"uri":{"regex":"/orders/saleorders"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/getOrderStatus"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/customer_orders"}},{"uri":{"regex":"/orders/batch_process"}},{"uri":{"regex":"/b\\/[^\\/]+\\/product/variant/info"}}],"route":[{"destination":{"host":"oe-searchorder-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/orders\\/[^\\/]+\\/approve"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/pick"}},{"uri":{"prefix":"/orders/approve/bulk"}},{"uri":{"prefix":"/orders/pick/bulk"}},{"uri":{"prefix":"/orders/ack/bulk"}}],"route":[{"destination":{"host":"oe-approveordertransition-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/orders\\/[^\\/]+\\/assign\\/[^\\/]+"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/getlocations"}},{"uri":{"prefix":"/orders/assign/bulk"}},{"uri":{"prefix":"/orders/autoassign/bulk"}},{"uri":{"regex":"/orders/autoassign\\/[^\\/]+"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/getskusum\\/[^\\/]+"}}],"route":[{"destination":{"host":"oe-assignordertransition-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/orders/create"}}],"route":[{"destination":{"host":"oe-newordertransition-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/orders\\/[^\\/]+\\/processOrder"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/dispatch"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/deliverOrReturnOrder\\/[^\\/]+"}},{"uri":{"prefix":"/orders/process/bulk"}},{"uri":{"prefix":"/orders/dispatch/bulk"}},{"uri":{"prefix":"/orders/deliver/bulk"}},{"uri":{"prefix":"/orders/return/bulk"}},{"uri":{"prefix":"/orders/updatestatusapi"}}],"route":[{"destination":{"host":"oe-processordertransition-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/orders\\/[^\\/]+\\/reverse_order"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/reverse_dead_order"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/updateOrderCustomerDetail"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/updateOrderItems"}},{"uri":{"regex":"/blackListedCustomer/add"}},{"uri":{"regex":"/blackListedCustomer/disable"}},{"uri":{"regex":"/blackListedCustomer/getAll\\/[^\\/]+\\/[^\\/]+\\/[^\\/]+"}}],"route":[{"destination":{"host":"oe-reverseordertransition-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/orders\\/[^\\/]+\\/book\\/[^\\/]+"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/rebook"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/getcouriers"}},{"uri":{"regex":"/orders/orderBulkAction"}},{"uri":{"regex":"/brands\\/[^\\/]+\\/brandcourier"}},{"uri":{"regex":"/locations\\/[^\\/]+\\/userlocations"}},{"uri":{"regex":"/locations\\/[^\\/]+\\/getUserLocationsWithOutHalt"}},{"uri":{"prefix":"/orders/book/bulk"}},{"uri":{"regex":"/orders/autobook\\/[^\\/]+"}},{"uri":{"regex":"/channel\\/[^\\/]+\\/getEnabledBrandChannels"}}],"retries":{"attempts":5,"perTryTimeout":"30s","retryOn":"5xx,gateway-error,connect-failure,refused-stream"},"route":[{"destination":{"host":"oe-bookordertransition-service.oe-stage.svc.cluster.local","port":{"number":80}}}],"timeout":"300s"},{"match":[{"uri":{"regex":"/orders\\/[^\\/]+\\/(manualverify|autoverify|ivrverify)"}},{"uri":{"prefix":"/orders/verify/bulk"}},{"uri":{"prefix":"/orders/localcities"}},{"uri":{"prefix":"/ivr/trigger"}}],"route":[{"destination":{"host":"oe-verifyordertransition-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/orders\\/[^\\/]+\\/dead"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/deadOrder"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/cancelbyebm"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/cancelbysm"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/completeOrder"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/closeOrder"}},{"uri":{"prefix":"/orders/close/bulk"}},{"uri":{"prefix":"/orders/complete/bulk"}},{"uri":{"prefix":"/orders/cancelbyebm/bulk"}},{"uri":{"prefix":"/orders/cancelbysm/bulk"}},{"uri":{"prefix":"/orders/cancel/bulk"}}],"route":[{"destination":{"host":"oe-finalstatetransition-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/omniLocationsUnassignedskuOrdersReport"}},{"uri":{"prefix":"/orders/get_items_sales_dump"}},{"uri":{"regex":"/unassignedskuOrdersReport\\/[^\\/]+"}},{"uri":{"regex":"/orders/generateDuplicateOrderList\\/[^\\/]+"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/download\\/SingleOrderFileAndDispatchNote"}},{"uri":{"regex":"/orders/generateLocationAvailabilityReport\\/[^\\/]+\\/[^\\/]+"}},{"uri":{"prefix":"/orders/generateOrderList"}},{"uri":{"prefix":"/orders/generatePickList"}},{"uri":{"prefix":"/orders/download/generateDispatchNote"}},{"uri":{"regex":"/orders\\/generateBulkFile\\/[^\\/]+\\/[^\\/]+\\/[^\\/]+\\/[^\\/]+"}},{"uri":{"regex":"/orders/generateFinalStatusFile\\/[^\\/]+\\/[^\\/]+\\/[^\\/]+\\/[^\\/]+\\/[^\\/]+"}},{"uri":{"regex":"/orders/download/BulkOrderFileAndDispatchNote\\/[^\\/]+\\/[^\\/]+\\/[^\\/]+\\/[^\\/]+"}},{"uri":{"prefix":"/orders/generatePackagingSlip"}},{"uri":{"prefix":"/orders/uploadbulkactionfile"}},{"uri":{"prefix":"/orders/get_items_sales_report"}},{"uri":{"prefix":"/adjustStoreInventory"}},{"uri":{"regex":"/orders/skuOrdersReport"}},{"uri":{"regex":"/orders/pick/report"}}],"route":[{"destination":{"host":"oe-reports-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"regex":"/orders/monitoring\\/[^\\/]+\\/[^\\/]+"}},{"uri":{"prefix":"/currency/getCurrencies"}},{"uri":{"prefix":"/orders/checkOrderAvailability"}},{"uri":{"regex":"/orders\\/[^\\/]+\\/updateOrderBrandDetails"}}],"route":[{"destination":{"host":"oe-posmonitoring.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/configs"}}],"route":[{"destination":{"host":"oe-onboarding-service-new.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/onboard"}}],"route":[{"destination":{"host":"oe-onboarding-service.oe-stage.svc.cluster.local","port":{"number":80}}}]},{"match":[{"uri":{"prefix":"/redis/load/brandinfo"}},{"uri":{"prefix":"/redis/"}}],"route":[{"destination":{"host":"oe-redisclient-service.oe-stage.svc.cluster.local","port":{"number":80}}}]}]}}
+  creationTimestamp: "2020-01-08T13:40:49Z"
+  generation: 409
+  name: backend-virtualservice
+  namespace: istio-system
+  resourceVersion: "345915913"
+  selfLink: /apis/networking.istio.io/v1beta1/namespaces/istio-system/virtualservices/backend-virtualservice
+  uid: 9c479b6c-110e-43f7-b13d-e180d11a55cc
+spec:
+  gateways:
+  - backend-gateway
+  hosts:
+  - oeprocessingstage.example.pk
+  http:
+  - match:
+    - uri:
+        prefix: /kiali/
+    route:
+    - destination:
+        host: kiali.istio-system.svc.cluster.local
+        port:
+          number: 20001
+  - match:
+    - uri:
+        prefix: /jaeger/
+    route:
+    - destination:
+        host: jaeger-query.istio-system.svc.cluster.local
+        port:
+          number: 16686
+  - match:
+    - uri:
+        prefix: /oauth
+    route:
+    - destination:
+        host: oauth.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /ignite
+    route:
+    - destination:
+        host: ignite-cluster.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /replenishment
+    route:
+    - destination:
+        host: replenishment.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /cubejs/
+    route:
+    - destination:
+        host: bi-engine.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /dashboard
+    route:
+    - destination:
+        host: dashboard-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /datadump/
+    route:
+    - destination:
+        host: orderdump-new.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /inventory/updateQuantityAPI
+    - uri:
+        prefix: /inventory/updatePriceAPI
+    - uri:
+        prefix: /inventory/sync_webstore
+    - uri:
+        prefix: /inventory/
+    - uri:
+        prefix: /inventory/create_outfinal
+    - uri:
+        prefix: /inventory/getMasterAndStroreInvDataOnSkuLevel
+    - uri:
+        regex: /inventory/brand_queue\/[^\/]+
+    route:
+    - destination:
+        host: inventory-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /reconcile/
+    route:
+    - destination:
+        host: reconciliation-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /scheduler/get_all\/[^\/]+
+    - uri:
+        regex: /scheduler\/[^\/]+\/update_job
+    - uri:
+        regex: /scheduler\/[^\/]+\/update_job_status
+    - uri:
+        regex: /scheduler\/[^\/]+\/create_markinvzero_job\/[^\/]+
+    route:
+    - destination:
+        host: oe-scheduler-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /scheduler/
+    route:
+    - destination:
+        host: scheduler-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /tracking/courierScheduler
+    route:
+    - destination:
+        host: courier-tracking-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /marketing
+    route:
+    - destination:
+        host: rfm-marketing-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /shopify-shipping-rates
+    route:
+    - destination:
+        host: shopify-shipping-rates-service.oe-stage.svc.cluster.local
+        port:
+          number: 3000
+  - match:
+    - uri:
+        prefix: /shopify
+    route:
+    - destination:
+        host: shopify-service.oe-stage.svc.cluster.local
+        port:
+          number: 3000
+  - match:
+    - uri:
+        prefix: /analytics
+    route:
+    - destination:
+        host: analytics-dashboard.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /slotting
+    route:
+    - destination:
+        host: oe-slotting-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /fbr/sync-order
+    route:
+    - destination:
+        host: fbr-integration-service.oe-stage.svc.cluster.local
+        port:
+          number: 8000
+  - match:
+    - uri:
+        prefix: /exampleoeadmin
+    route:
+    - destination:
+        host: bootadmin.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /users/
+    - uri:
+        prefix: /monitoring/
+    - uri:
+        prefix: /backup/loadBrand
+    - uri:
+        prefix: /backup/loadBrandChannel
+    - uri:
+        prefix: /backup/loadLocation
+    - uri:
+        prefix: /backup/cancellationReason
+    - uri:
+        prefix: /backup/
+    - uri:
+        prefix: /orders/getSkuOrderLevelDetail
+    - uri:
+        prefix: /orders/generateReplenishmentReport
+    - uri:
+        prefix: /backup/addComment
+    - uri:
+        prefix: /searchOrdersBySku
+    - uri:
+        prefix: /backup/addOrderBrandDetails
+    route:
+    - destination:
+        host: order-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /orders\/[^\/]+\/item\/[^\/]+
+    - uri:
+        regex: /orders\/[^\/]+\/(editbyebm|editbysm)
+    - uri:
+        regex: /orders\/[^\/]+\/(updateordersm|updateorderebm)
+    - uri:
+        regex: /orders\/[^\/]+\/split
+    - uri:
+        regex: /orders\/[^\/]+\/(manualSplit|getManualSplitLocations)
+    - uri:
+        regex: /orders\/[^\/]+\/addComment
+    - uri:
+        regex: /orders\/[^\/]+\/updateTag
+    - uri:
+        regex: /orders\/[^\/]+\/getSkuAvailability\/[^\/]+
+    - uri:
+        regex: /orders\/[^\/]+\/checkStoreQuantity
+    - uri:
+        prefix: /orders/shopify/createEditedOrder
+    route:
+    - destination:
+        host: oe-editordertransition-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /orders/crm_searchorders
+    - uri:
+        regex: /orders/searchOrders
+    - uri:
+        regex: /orders/orderCount
+    - uri:
+        regex: /orders\/[^\/]+\/detail
+    - uri:
+        regex: /orders\/[^\/]+\/crm_detail
+    - uri:
+        regex: /orders/saleorders
+    - uri:
+        regex: /orders\/[^\/]+\/getOrderStatus
+    - uri:
+        regex: /orders\/[^\/]+\/customer_orders
+    - uri:
+        regex: /orders/batch_process
+    - uri:
+        regex: /b\/[^\/]+\/product/variant/info
+    route:
+    - destination:
+        host: oe-searchorder-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /orders\/[^\/]+\/approve
+    - uri:
+        regex: /orders\/[^\/]+\/pick
+    - uri:
+        prefix: /orders/approve/bulk
+    - uri:
+        prefix: /orders/pick/bulk
+    - uri:
+        prefix: /orders/ack/bulk
+    route:
+    - destination:
+        host: oe-approveordertransition-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /orders\/[^\/]+\/assign\/[^\/]+
+    - uri:
+        regex: /orders\/[^\/]+\/getlocations
+    - uri:
+        prefix: /orders/assign/bulk
+    - uri:
+        prefix: /orders/autoassign/bulk
+    - uri:
+        regex: /orders/autoassign\/[^\/]+
+    - uri:
+        regex: /orders\/[^\/]+\/getskusum\/[^\/]+
+    route:
+    - destination:
+        host: oe-assignordertransition-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /orders/create
+    route:
+    - destination:
+        host: oe-newordertransition-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /orders\/[^\/]+\/processOrder
+    - uri:
+        regex: /orders\/[^\/]+\/dispatch
+    - uri:
+        regex: /orders\/[^\/]+\/deliverOrReturnOrder\/[^\/]+
+    - uri:
+        prefix: /orders/process/bulk
+    - uri:
+        prefix: /orders/dispatch/bulk
+    - uri:
+        prefix: /orders/deliver/bulk
+    - uri:
+        prefix: /orders/return/bulk
+    - uri:
+        prefix: /orders/updatestatusapi
+    route:
+    - destination:
+        host: oe-processordertransition-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /orders\/[^\/]+\/reverse_order
+    - uri:
+        regex: /orders\/[^\/]+\/reverse_dead_order
+    - uri:
+        regex: /orders\/[^\/]+\/updateOrderCustomerDetail
+    - uri:
+        regex: /orders\/[^\/]+\/updateOrderItems
+    - uri:
+        regex: /blackListedCustomer/add
+    - uri:
+        regex: /blackListedCustomer/disable
+    - uri:
+        regex: /blackListedCustomer/getAll\/[^\/]+\/[^\/]+\/[^\/]+
+    route:
+    - destination:
+        host: oe-reverseordertransition-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /orders\/[^\/]+\/book\/[^\/]+
+    - uri:
+        regex: /orders\/[^\/]+\/rebook
+    - uri:
+        regex: /orders\/[^\/]+\/getcouriers
+    - uri:
+        regex: /orders/orderBulkAction
+    - uri:
+        regex: /brands\/[^\/]+\/brandcourier
+    - uri:
+        regex: /locations\/[^\/]+\/userlocations
+    - uri:
+        regex: /locations\/[^\/]+\/getUserLocationsWithOutHalt
+    - uri:
+        prefix: /orders/book/bulk
+    - uri:
+        regex: /orders/autobook\/[^\/]+
+    - uri:
+        regex: /channel\/[^\/]+\/getEnabledBrandChannels
+    retries:
+      attempts: 5
+      perTryTimeout: 30s
+      retryOn: 5xx,gateway-error,connect-failure,refused-stream
+    route:
+    - destination:
+        host: oe-bookordertransition-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+    timeout: 300s
+  - match:
+    - uri:
+        regex: /orders\/[^\/]+\/(manualverify|autoverify|ivrverify)
+    - uri:
+        prefix: /orders/verify/bulk
+    - uri:
+        prefix: /orders/localcities
+    - uri:
+        prefix: /ivr/trigger
+    route:
+    - destination:
+        host: oe-verifyordertransition-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /orders\/[^\/]+\/dead
+    - uri:
+        regex: /orders\/[^\/]+\/deadOrder
+    - uri:
+        regex: /orders\/[^\/]+\/cancelbyebm
+    - uri:
+        regex: /orders\/[^\/]+\/cancelbysm
+    - uri:
+        regex: /orders\/[^\/]+\/completeOrder
+    - uri:
+        regex: /orders\/[^\/]+\/closeOrder
+    - uri:
+        prefix: /orders/close/bulk
+    - uri:
+        prefix: /orders/complete/bulk
+    - uri:
+        prefix: /orders/cancelbyebm/bulk
+    - uri:
+        prefix: /orders/cancelbysm/bulk
+    - uri:
+        prefix: /orders/cancel/bulk
+    route:
+    - destination:
+        host: oe-finalstatetransition-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /omniLocationsUnassignedskuOrdersReport
+    - uri:
+        prefix: /orders/get_items_sales_dump
+    - uri:
+        regex: /unassignedskuOrdersReport\/[^\/]+
+    - uri:
+        regex: /orders/generateDuplicateOrderList\/[^\/]+
+    - uri:
+        regex: /orders\/[^\/]+\/download\/SingleOrderFileAndDispatchNote
+    - uri:
+        regex: /orders/generateLocationAvailabilityReport\/[^\/]+\/[^\/]+
+    - uri:
+        prefix: /orders/generateOrderList
+    - uri:
+        prefix: /orders/generatePickList
+    - uri:
+        prefix: /orders/download/generateDispatchNote
+    - uri:
+        regex: /orders\/generateBulkFile\/[^\/]+\/[^\/]+\/[^\/]+\/[^\/]+
+    - uri:
+        regex: /orders/generateFinalStatusFile\/[^\/]+\/[^\/]+\/[^\/]+\/[^\/]+\/[^\/]+
+    - uri:
+        regex: /orders/download/BulkOrderFileAndDispatchNote\/[^\/]+\/[^\/]+\/[^\/]+\/[^\/]+
+    - uri:
+        prefix: /orders/generatePackagingSlip
+    - uri:
+        prefix: /orders/uploadbulkactionfile
+    - uri:
+        prefix: /orders/get_items_sales_report
+    - uri:
+        prefix: /adjustStoreInventory
+    - uri:
+        regex: /orders/skuOrdersReport
+    - uri:
+        regex: /orders/pick/report
+    route:
+    - destination:
+        host: oe-reports-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        regex: /orders/monitoring\/[^\/]+\/[^\/]+
+    - uri:
+        prefix: /currency/getCurrencies
+    - uri:
+        prefix: /orders/checkOrderAvailability
+    - uri:
+        regex: /orders\/[^\/]+\/updateOrderBrandDetails
+    route:
+    - destination:
+        host: oe-posmonitoring.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /configs
+    route:
+    - destination:
+        host: oe-onboarding-service-new.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /onboard
+    route:
+    - destination:
+        host: oe-onboarding-service.oe-stage.svc.cluster.local
+        port:
+          number: 80
+  - match:
+    - uri:
+        prefix: /redis/load/brandinfo
+    - uri:
+        prefix: /redis/
+    route:
+    - destination:
+        host: oe-redisclient-service.oe-stage.svc.cluster.local
+        port:
+          number: 80

@@ -1,0 +1,16 @@
+apiVersion: appmesh.k8s.aws/v1beta2
+kind: VirtualNode
+metadata:
+  name: oe-searchorder-service
+  namespace: oe-stage
+spec:
+  podSelector:
+    matchLabels:
+      app: oe-searchorder-service
+  listeners:
+    - portMapping:
+        port: 80
+        protocol: http
+  serviceDiscovery:
+    dns:
+      hostname: oe-searchorder-service.my-apps.svc.cluster.local
