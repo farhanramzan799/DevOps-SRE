@@ -1,0 +1,49 @@
+#Runs a weekly scheduled job (every Sunday at 10 PM) to defragment the etcd database on Kubernetes control plane nodes, reclaiming disk space and improving performance.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: etcd-defrag
+  namespace: kube-system
+spec:
+  schedule: "0 22 * * 0" 
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          hostNetwork: true  # Needed to reach etcd via localhost
+          restartPolicy: OnFailure
+          securityContext:
+            runAsUser: 0
+          containers:
+          - name: etcd-defrag
+            image: ghcr.io/ahrtr/etcd-defrag:v0.18.0
+            args:
+            - --endpoints=https://127.0.0.1:2379
+            - --cacert=/etc/etcd-certs/server-ca.crt
+            - --cert=/etc/etcd-certs/server-client.crt
+            - --key=/etc/etcd-certs/server-client.key
+            - --cluster
+            # Optional rule (uncomment to defrag conditionally)
+            # - --defrag-rule
+            # - "dbQuotaUsage > 0.8 || dbSize - dbSizeInUse > 200*1024*1024"
+            volumeMounts:
+            - name: etcd-certs
+              mountPath: /etc/etcd-certs
+              readOnly: true
+          volumes:
+          - name: etcd-certs
+            hostPath:
+              path: /var/lib/rancher/rke2/server/tls/etcd
+              type: Directory
+          tolerations:
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/control-plane
+          - effect: NoExecute
+            operator: Exists
+          affinity:
+            nodeAffinity:
+              requiredDuringSchedulingIgnoredDuringExecution:
+                nodeSelectorTerms:
+                - matchExpressions:
+                  - key: node-role.kubernetes.io/control-plane
+                    operator: Exists
